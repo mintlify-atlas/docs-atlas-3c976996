@@ -1,0 +1,192 @@
+---
+title: Using as kubectl Plugins
+description: Learn how to use kubectx and kubens as native kubectl plugins through Krew
+---
+
+kubectx and kubens can be installed and used as native kubectl plugins through [Krew](https://krew.sigs.k8s.io/), the kubectl plugin manager. This provides seamless integration with your kubectl workflow.
+
+## Installation via Krew
+
+<Steps>
+  <Step title="Install Krew">
+    If you don't have Krew installed, follow the [Krew installation guide](https://krew.sigs.k8s.io/docs/user-guide/setup/install/).
+  </Step>
+
+  <Step title="Install the plugins">
+    Install both kubectx and kubens as kubectl plugins:
+
+    ```bash
+    kubectl krew install ctx
+    kubectl krew install ns
+    ```
+  </Step>
+
+  <Step title="Verify installation">
+    Check that the plugins are installed correctly:
+
+    ```bash
+    kubectl plugin list
+    ```
+
+    You should see `kubectl-ctx` and `kubectl-ns` in the output.
+  </Step>
+</Steps>
+
+<Note>
+  Krew installation does not include shell completion scripts. If you need tab completion, install the scripts manually or use another installation method like Homebrew.
+</Note>
+
+## Usage as kubectl Plugins
+
+Once installed via Krew, the tools are available as `kubectl ctx` and `kubectl ns` instead of standalone commands.
+
+### kubectl ctx Commands
+
+All standard kubectx operations work with the `kubectl ctx` prefix:
+
+```bash
+# List all contexts
+kubectl ctx
+
+# Switch to a specific context
+kubectl ctx minikube
+
+# Switch to previous context
+kubectl ctx -
+
+# Show current context
+kubectl ctx -c
+kubectl ctx --current
+
+# Rename a context
+kubectl ctx new-name=old-name
+
+# Rename current context
+kubectl ctx new-name=.
+
+# Unset current context
+kubectl ctx -u
+kubectl ctx --unset
+
+# Delete a context
+kubectl ctx -d context-name
+
+# Delete current context
+kubectl ctx -d .
+```
+
+### kubectl ns Commands
+
+All standard kubens operations work with the `kubectl ns` prefix:
+
+```bash
+# List all namespaces
+kubectl ns
+
+# Switch to a namespace
+kubectl ns kube-system
+
+# Switch to previous namespace
+kubectl ns -
+
+# Show current namespace
+kubectl ns -c
+kubectl ns --current
+
+# Force switch to a namespace (even if it doesn't exist)
+kubectl ns non-existent-ns --force
+kubectl ns non-existent-ns -f
+```
+
+## Interactive Mode with fzf
+
+When [fzf](https://github.com/junegunn/fzf) is installed, the kubectl plugin versions support the same interactive fuzzy-search functionality:
+
+```bash
+# Interactive context selection
+kubectl ctx
+
+# Interactive namespace selection
+kubectl ns
+```
+
+<Tip>
+  The plugin automatically detects fzf and enables interactive mode when you run the commands without arguments.
+</Tip>
+
+### Disabling Interactive Mode
+
+To disable fzf integration even when fzf is installed:
+
+```bash
+export KUBECTX_IGNORE_FZF=1
+```
+
+Or pipe the output to another command:
+
+```bash
+kubectl ctx | cat
+kubectl ns | grep prod
+```
+
+## Advantages of kubectl Plugin Usage
+
+<Accordion title="Unified kubectl interface">
+  All your Kubernetes tools are accessible through the `kubectl` command, providing a consistent user experience.
+</Accordion>
+
+<Accordion title="Easier discovery">
+  Users can discover available plugins using `kubectl plugin list` or `kubectl krew search`.
+</Accordion>
+
+<Accordion title="Easy updates">
+  Update both tools with a single command:
+  
+  ```bash
+  kubectl krew upgrade ctx ns
+  ```
+</Accordion>
+
+<Accordion title="Cross-platform compatibility">
+  Krew handles platform-specific installation details automatically.
+</Accordion>
+
+## Switching Between Standalone and Plugin Usage
+
+You can have both the standalone binaries and kubectl plugins installed simultaneously. They work identically:
+
+```bash
+# These are equivalent:
+kubectx minikube
+kubectl ctx minikube
+
+# These are also equivalent:
+kubens kube-system
+kubectl ns kube-system
+```
+
+<Warning>
+  If you have both installed, ensure they're the same version to avoid inconsistent behavior.
+</Warning>
+
+## Uninstalling
+
+To remove the kubectl plugins:
+
+```bash
+kubectl krew uninstall ctx ns
+```
+
+## Plugin Information
+
+View detailed information about the plugins:
+
+```bash
+# Show plugin info
+kubectl krew info ctx
+kubectl krew info ns
+
+# Show installed version
+kubectl ctx --version
+kubectl ns --version
+```

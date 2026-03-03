@@ -1,0 +1,464 @@
+---
+title: 'kubens Command Reference'
+description: 'Complete reference guide for all kubens commands, flags, and options'
+---
+
+`kubens` is a powerful command-line tool for switching between Kubernetes namespaces quickly and efficiently within the current context.
+
+## Overview
+
+The `kubens` command can be invoked as either:
+- `kubens` - standalone binary
+- `kubectl ns` - as a kubectl plugin
+
+All commands and examples below work with either invocation method.
+
+## Commands
+
+### List Namespaces
+
+<ParamField body="kubens" type="command">
+  Lists all namespaces in the current Kubernetes context.
+</ParamField>
+
+**Usage:**
+```bash
+kubens
+```
+
+**Behavior:**
+- If `fzf` is installed and output is to a terminal, launches interactive fuzzy search mode
+- Otherwise, displays a list of all namespaces with the current namespace highlighted
+- The current namespace is marked with a different color (customizable via environment variables)
+- Requires connection to the Kubernetes cluster to fetch namespace list
+
+**Example:**
+```bash
+$ kubens
+default
+kube-system
+kube-public
+kube-node-lease
+my-app
+staging
+```
+
+---
+
+### Switch Namespace
+
+<ParamField body="kubens <NAME>" type="command">
+  Changes the active namespace for the current context.
+</ParamField>
+
+**Parameters:**
+- `<NAME>` - The name of the namespace to switch to
+
+**Usage:**
+```bash
+kubens <NAME>
+```
+
+**Behavior:**
+- By default, validates that the namespace exists in the cluster
+- Updates the `namespace` field for the current context in kubeconfig
+- All subsequent kubectl commands will use this namespace by default
+
+**Example:**
+```bash
+$ kubens kube-system
+Context "minikube" modified.
+Active namespace is "kube-system".
+```
+
+---
+
+### Force Switch Namespace
+
+<ParamField body="kubens <NAME> --force" type="command">
+  Changes the active namespace without validating its existence.
+</ParamField>
+
+**Aliases:** `-f`, `--force`
+
+**Syntax:**
+```bash
+kubens <NAME> --force
+kubens <NAME> -f
+kubens --force <NAME>    # Flag order doesn't matter
+kubens -f <NAME>
+```
+
+**Parameters:**
+- `<NAME>` - The name of the namespace to switch to
+- `--force` or `-f` - Skip namespace existence validation
+
+**Behavior:**
+- Does not check if the namespace exists in the cluster
+- Useful for setting up namespaces that will be created later
+- Updates kubeconfig even if cluster is unreachable
+
+**Use Cases:**
+- Prepare configuration before namespace creation
+- Work with namespaces in disconnected environments
+- Automate setup scripts that create namespaces after setting them
+
+**Examples:**
+```bash
+# Force switch to a namespace that doesn't exist yet
+$ kubens not-found-namespace --force
+Context "test" modified.
+Active namespace is "not-found-namespace".
+
+# Short form
+$ kubens new-app -f
+Context "test" modified.
+Active namespace is "new-app".
+```
+
+---
+
+### Switch to Previous Namespace
+
+<ParamField body="kubens -" type="command">
+  Switches back to the previously active namespace in the current context.
+</ParamField>
+
+**Usage:**
+```bash
+kubens -
+```
+
+**Behavior:**
+- Maintains a state file tracking the previous namespace per context
+- Allows quick toggling between two namespaces
+- Similar to `cd -` in shell navigation
+- Previous namespace is context-specific
+
+**Example:**
+```bash
+$ kubens default
+Context "minikube" modified.
+Active namespace is "default".
+
+$ kubens kube-system
+Context "minikube" modified.
+Active namespace is "kube-system".
+
+$ kubens -
+Context "minikube" modified.
+Active namespace is "default".
+```
+
+---
+
+### Show Current Namespace
+
+<ParamField body="kubens --current" type="command">
+  Displays the name of the current active namespace.
+</ParamField>
+
+**Aliases:** `-c`, `--current`
+
+**Usage:**
+```bash
+kubens --current
+kubens -c
+```
+
+**Example:**
+```bash
+$ kubens -c
+default
+```
+
+**Use Cases:**
+- Shell scripting and automation
+- Display in shell prompts (PS1)
+- CI/CD pipeline validation
+- Verify namespace before executing commands
+
+---
+
+### Display Help
+
+<ParamField body="kubens --help" type="command">
+  Shows usage information and command reference.
+</ParamField>
+
+**Aliases:** `-h`, `--help`
+
+**Usage:**
+```bash
+kubens --help
+kubens -h
+```
+
+---
+
+### Display Version
+
+<ParamField body="kubens --version" type="command">
+  Shows the version of kubens.
+</ParamField>
+
+**Aliases:** `-V`, `--version`
+
+**Usage:**
+```bash
+kubens --version
+kubens -V
+```
+
+---
+
+## Interactive Mode
+
+When `fzf` is installed and stdout is a terminal, `kubens` launches interactive mode:
+
+### Interactive Namespace Selection
+
+Running `kubens` without arguments opens an interactive fuzzy finder:
+
+```bash
+$ kubens
+# Opens fzf with list of namespaces
+# Type to filter, use arrow keys to select
+# Press Enter to switch to selected namespace
+```
+
+**Features:**
+- Real-time fuzzy search filtering
+- Current namespace highlighted
+- Arrow key navigation
+- Multi-character search patterns
+
+### Disabling Interactive Mode
+
+To disable `fzf` integration:
+
+```bash
+export KUBECTX_IGNORE_FZF=1
+```
+
+Or pipe output to another command:
+
+```bash
+kubens | cat    # Forces non-interactive mode
+```
+
+---
+
+## Environment Variables
+
+### Color Customization
+
+<ParamField path="KUBECTX_CURRENT_FGCOLOR" type="string">
+  Foreground color for the current namespace indicator.
+</ParamField>
+
+<ParamField path="KUBECTX_CURRENT_BGCOLOR" type="string">
+  Background color for the current namespace indicator.
+</ParamField>
+
+**Usage:**
+```bash
+export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 6)  # blue text
+export KUBECTX_CURRENT_BGCOLOR=$(tput setab 7)  # white background
+```
+
+Refer to [tput color codes](https://linux.101hacks.com/ps1-examples/prompt-color-using-tput/) for color values.
+
+<Note>
+These environment variables are shared with `kubectx` and affect both tools.
+</Note>
+
+---
+
+### Disable Colors
+
+<ParamField path="NO_COLOR" type="string">
+  Disables all color output when set to any value.
+</ParamField>
+
+**Usage:**
+```bash
+export NO_COLOR=1
+```
+
+Follows the [NO_COLOR standard](https://no-color.org/).
+
+---
+
+### Disable fzf Integration
+
+<ParamField path="KUBECTX_IGNORE_FZF" type="string">
+  Disables interactive mode with fzf when set to 1.
+</ParamField>
+
+**Usage:**
+```bash
+export KUBECTX_IGNORE_FZF=1
+```
+
+<Note>
+This environment variable is shared with `kubectx` and affects both tools.
+</Note>
+
+---
+
+## Exit Codes
+
+| Code | Description |
+|------|-------------|
+| `0`  | Success |
+| `1`  | Error occurred (invalid namespace, cluster unreachable, etc.) |
+
+---
+
+## Shell Completion
+
+`kubens` supports tab completion for:
+- bash
+- zsh
+- fish
+
+Completion scripts are included with most installation methods. See the [Installation guide](/installation) for details on enabling completion for your shell.
+
+**Features:**
+- Tab completion for namespace names
+- Dynamic completion from current cluster
+- Flag and option completion
+
+---
+
+## Integration with kubectl
+
+When installed as a kubectl plugin via [Krew](https://krew.sigs.k8s.io/), use:
+
+```bash
+kubectl ns                  # instead of kubens
+kubectl ns kube-system      # switch namespace
+kubectl ns --current        # show current
+kubectl ns -f new-ns        # force switch
+```
+
+---
+
+## State Management
+
+`kubens` stores the previous namespace per context in a state file:
+
+- **Location:** `~/.kube/kubens/` (or `$KUBECTX_STATE_DIR/kubens/` if set)
+- **Format:** Separate files for each context, named by context name
+- **Content:** Plain text containing the name of the previous namespace
+- **Automatic:** Created and managed automatically
+
+**Example:**
+```bash
+$ ls ~/.kube/kubens/
+minikube
+production
+staging
+```
+
+Each file contains the previous namespace for that specific context.
+
+---
+
+## Common Use Cases
+
+### Quick Namespace Switching
+
+Toggle between application and system namespaces:
+
+```bash
+kubens my-app
+# Check application pods
+kubectl get pods
+
+kubens kube-system
+# Check system pods
+kubectl get pods
+
+kubens -      # Back to my-app
+```
+
+### Development Workflow
+
+Switch between development and testing namespaces:
+
+```bash
+kubens dev
+kubectl apply -f deployment.yaml
+
+kubens test
+kubectl apply -f deployment.yaml
+```
+
+### Pre-create Namespace Configuration
+
+Set namespace before it exists:
+
+```bash
+kubens new-feature -f
+kubectl create namespace new-feature
+kubectl apply -f manifests/
+```
+
+### Scripting and Automation
+
+Save and restore namespace in scripts:
+
+```bash
+#!/bin/bash
+CURRENT_NS=$(kubens -c)
+
+# Perform operations in different namespace
+kubens kube-system
+kubectl get configmaps
+
+# Restore original namespace
+kubens "$CURRENT_NS"
+```
+
+### Multi-tenant Clusters
+
+Quickly navigate between team namespaces:
+
+```bash
+kubens team-a
+kubens team-b
+kubens team-c
+```
+
+---
+
+## Comparison with kubectl
+
+Traditional kubectl approach vs kubens:
+
+```bash
+# Traditional approach
+kubectl config set-context --current --namespace=kube-system
+
+# With kubens
+kubens kube-system
+```
+
+Benefits of kubens:
+- Shorter, easier to remember command
+- Interactive mode with fuzzy search
+- Quick toggling with `-`
+- Tab completion for namespace names
+- Visual indication of current namespace
+
+---
+
+## Notes
+
+- Namespace changes are context-specific and persist in kubeconfig
+- The previous namespace is tracked separately for each context
+- Without `--force`, kubens validates namespace existence by querying the cluster
+- When switching contexts with `kubectx`, the namespace for that context is automatically used
+- Use `kubens -c` to verify the current namespace before running destructive operations

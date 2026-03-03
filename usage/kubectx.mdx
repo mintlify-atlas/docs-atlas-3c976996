@@ -1,0 +1,272 @@
+---
+title: kubectx Commands
+description: Complete guide to kubectx commands for managing Kubernetes contexts
+---
+
+kubectx is a utility to manage and switch between kubectl contexts easily. It provides a faster way to switch between clusters and contexts than using `kubectl config use-context`.
+
+## Basic Usage
+
+### List All Contexts
+
+Display all available Kubernetes contexts from your kubeconfig:
+
+```bash
+kubectx
+```
+
+**Example output:**
+```
+minikube
+gke_project_us-central1_cluster-1
+arn:aws:eks:us-west-2:123456789012:cluster/production
+```
+
+The current context is highlighted with a different color.
+
+### Switch to a Context
+
+Switch to a specific context by name:
+
+```bash
+kubectx <context-name>
+```
+
+<Steps>
+  <Step title="Switch context">
+    ```bash
+    kubectx minikube
+    ```
+    **Output:**
+    ```
+    Switched to context "minikube".
+    ```
+  </Step>
+  
+  <Step title="Verify the switch">
+    ```bash
+    kubectl config current-context
+    ```
+    **Output:**
+    ```
+    minikube
+    ```
+  </Step>
+</Steps>
+
+### Switch to Previous Context
+
+Quickly switch back to the previous context using the `-` shorthand:
+
+```bash
+kubectx -
+```
+
+**Example:**
+```bash
+# Currently on 'production'
+kubectx staging
+# Switched to context "staging".
+
+kubectx -
+# Switched to context "production".
+```
+
+<Tip>
+The `-` shorthand works like `cd -` in bash, allowing you to quickly toggle between two contexts.
+</Tip>
+
+## Context Management
+
+### Show Current Context
+
+Display the currently active context:
+
+```bash
+kubectx -c
+# or
+kubectx --current
+```
+
+**Output:**
+```
+minikube
+```
+
+### Rename a Context
+
+Rename an existing context using the `NEW_NAME=OLD_NAME` syntax:
+
+```bash
+kubectx <new-name>=<old-name>
+```
+
+<CodeGroup>
+```bash Rename specific context
+kubectx prod=gke_project_us-central1_production
+```
+
+```bash Rename current context
+kubectx my-cluster=.
+```
+</CodeGroup>
+
+<Note>
+The `.` represents the current context. Using `new-name=.` renames whatever context is currently active.
+</Note>
+
+**Example output:**
+```
+Context gke_project_us-central1_production renamed to prod.
+```
+
+If the new context name already exists, kubectx will overwrite it with a warning:
+```
+context "prod" exists, overwriting it.
+Context gke_project_us-central1_production renamed to prod.
+```
+
+### Unset Current Context
+
+Remove the current context preference from kubeconfig:
+
+```bash
+kubectx -u
+# or
+kubectx --unset
+```
+
+**Output:**
+```
+Active context unset for kubectl.
+```
+
+<Warning>
+After unsetting the context, kubectl commands will fail until you set a new context with `kubectx <name>`.
+</Warning>
+
+### Delete Context(s)
+
+Delete one or more contexts from your kubeconfig:
+
+```bash
+kubectx -d <context-name> [<context-name>...]
+```
+
+<CodeGroup>
+```bash Delete single context
+kubectx -d old-cluster
+```
+
+```bash Delete multiple contexts
+kubectx -d cluster1 cluster2 cluster3
+```
+
+```bash Delete current context
+kubectx -d .
+```
+</CodeGroup>
+
+**Example output:**
+```
+Deleted context old-cluster.
+```
+
+If you delete the currently active context:
+```
+You deleted the current context. Use "kubectx" to select a new context.
+Deleted context production.
+```
+
+<Note>
+Deleting a context only removes the context entry from your kubeconfig. It does **not** delete the associated user or cluster entries.
+</Note>
+
+## Command Reference
+
+### All Commands
+
+| Command | Description |
+|---------|-------------|
+| `kubectx` | List all contexts |
+| `kubectx <NAME>` | Switch to context NAME |
+| `kubectx -` | Switch to previous context |
+| `kubectx -c, --current` | Show current context |
+| `kubectx <NEW>=<OLD>` | Rename context OLD to NEW |
+| `kubectx <NEW>=.` | Rename current context to NEW |
+| `kubectx -u, --unset` | Unset current context |
+| `kubectx -d <NAME>...` | Delete context(s) NAME |
+| `kubectx -h, --help` | Show help message |
+| `kubectx -V, --version` | Show version |
+
+### Using as kubectl Plugin
+
+kubectx can also be used as a kubectl plugin:
+
+```bash
+kubectl ctx
+kubectl ctx minikube
+kubectl ctx -
+```
+
+<Tip>
+When installed as a kubectl plugin (as `kubectl-ctx`), all the same commands work with `kubectl ctx` instead of `kubectx`.
+</Tip>
+
+## Practical Examples
+
+### Switching Between Environments
+
+```bash
+# List contexts to see what's available
+kubectx
+
+# Switch to development
+kubectx dev-cluster
+# Switched to context "dev-cluster".
+
+# Do some work, then switch to staging
+kubectx staging-cluster
+# Switched to context "staging-cluster".
+
+# Need to check something in dev again
+kubectx -
+# Switched to context "dev-cluster".
+```
+
+### Organizing Context Names
+
+```bash
+# Rename long AWS EKS context names
+kubectx dev=arn:aws:eks:us-west-2:123456789012:cluster/dev
+kubectx staging=arn:aws:eks:us-west-2:123456789012:cluster/staging
+kubectx prod=arn:aws:eks:us-west-2:123456789012:cluster/production
+
+# Now your context list is cleaner
+kubectx
+# dev
+# staging  
+# prod
+```
+
+### Cleanup Old Contexts
+
+```bash
+# Remove multiple old clusters at once
+kubectx -d old-dev old-staging temp-test-cluster
+# Deleted context old-dev.
+# Deleted context old-staging.
+# Deleted context temp-test-cluster.
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Interactive Mode" icon="terminal" href="/usage/interactive-mode">
+    Use fzf for interactive context selection
+  </Card>
+  
+  <Card title="Shell Completion" icon="code" href="/usage/shell-completion">
+    Set up shell autocompletion for faster workflows
+  </Card>
+</CardGroup>

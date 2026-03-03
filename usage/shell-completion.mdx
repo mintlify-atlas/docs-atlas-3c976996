@@ -1,0 +1,456 @@
+---
+title: Shell Completion
+description: Set up shell autocompletion for kubectx and kubens
+---
+
+Shell completion makes kubectx and kubens even faster by providing tab-completion for context and namespace names. This guide covers setup for Bash, Zsh, and Fish shells.
+
+## Bash Completion
+
+### Installation
+
+The completion scripts are located in the `completion/` directory of the kubectx repository.
+
+<Steps>
+  <Step title="Locate completion scripts">
+    If installed via package manager, completion scripts should be automatically installed. Otherwise:
+    
+    ```bash
+    # Clone the repository
+    git clone https://github.com/ahmetb/kubectx.git
+    cd kubectx/completion
+    ```
+  </Step>
+  
+  <Step title="Source the completion scripts">
+    Add to your `~/.bashrc` or `~/.bash_profile`:
+    
+    ```bash
+    # kubectx completion
+    source /path/to/kubectx/completion/kubectx.bash
+    
+    # kubens completion
+    source /path/to/kubectx/completion/kubens.bash
+    ```
+  </Step>
+  
+  <Step title="Reload your shell">
+    ```bash
+    source ~/.bashrc
+    ```
+  </Step>
+</Steps>
+
+### Package Manager Installation
+
+<CodeGroup>
+```bash Homebrew (macOS/Linux)
+# Completion is automatically set up
+brew install kubectx
+
+# Ensure bash-completion is installed
+brew install bash-completion@2
+
+# Add to ~/.bash_profile or ~/.bashrc:
+export BASH_COMPLETION_COMPAT_DIR="/usr/local/etc/bash_completion.d"
+[[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"
+```
+
+```bash APT (Ubuntu/Debian)
+# Install kubectx
+sudo apt install kubectx
+
+# Completion scripts are installed to:
+# /usr/share/bash-completion/completions/kubectx
+# /usr/share/bash-completion/completions/kubens
+
+# Ensure bash-completion is installed
+sudo apt install bash-completion
+```
+</CodeGroup>
+
+### Usage
+
+Once configured, use Tab to complete context names:
+
+```bash
+kubectx mi<TAB>
+# Expands to:
+kubectx minikube
+
+kubectx gke_<TAB><TAB>
+# Shows all contexts starting with gke_:
+gke_project_us-central1_dev
+gke_project_us-central1_staging  
+gke_project_us-central1_prod
+```
+
+The `-` shorthand is also completed:
+```bash
+kubectx -<TAB>
+# Completes to:
+kubectx -
+```
+
+## Zsh Completion
+
+### Installation
+
+<Steps>
+  <Step title="Locate completion scripts">
+    Zsh completion scripts use the `_` prefix:
+    
+    ```bash
+    ls -l completion/_kubectx.zsh
+    ls -l completion/_kubens.zsh
+    ```
+  </Step>
+  
+  <Step title="Copy to fpath location">
+    Copy completion scripts to a directory in your `$fpath`:
+    
+    ```bash
+    # Create completion directory if it doesn't exist
+    mkdir -p ~/.zsh/completion
+    
+    # Copy completion files
+    cp completion/_kubectx.zsh ~/.zsh/completion/_kubectx
+    cp completion/_kubens.zsh ~/.zsh/completion/_kubens
+    ```
+  </Step>
+  
+  <Step title="Update ~/.zshrc">
+    Add the completion directory to your fpath before loading compinit:
+    
+    ```bash
+    # Add to ~/.zshrc
+    fpath=(~/.zsh/completion $fpath)
+    
+    autoload -U compinit
+    compinit
+    ```
+  </Step>
+  
+  <Step title="Reload your shell">
+    ```bash
+    source ~/.zshrc
+    ```
+  </Step>
+</Steps>
+
+### Oh My Zsh Installation
+
+If you use Oh My Zsh:
+
+```bash
+# Copy to custom plugins directory
+mkdir -p ~/.oh-my-zsh/custom/completions
+cp completion/_kubectx.zsh ~/.oh-my-zsh/custom/completions/_kubectx
+cp completion/_kubens.zsh ~/.oh-my-zsh/custom/completions/_kubens
+
+# Reload
+source ~/.zshrc
+```
+
+### Package Manager Installation
+
+<CodeGroup>
+```bash Homebrew (macOS/Linux)
+# Install kubectx
+brew install kubectx
+
+# Completion is automatically set up via brew's fpath integration
+# Ensure this is in your ~/.zshrc:
+if type brew &>/dev/null; then
+  FPATH=$(brew --prefix)/share/zsh/site-functions:$FPATH
+  autoload -U compinit
+  compinit
+fi
+```
+
+```bash APT (Ubuntu/Debian)
+# Install kubectx  
+sudo apt install kubectx
+
+# Completion files are installed to:
+# /usr/share/zsh/vendor-completions/_kubectx
+# /usr/share/zsh/vendor-completions/_kubens
+```
+</CodeGroup>
+
+### Features
+
+Zsh completion includes:
+- Context name completion
+- Support for `-` (switch to previous)
+- Support for `-d` flag with context names
+- Dynamic context list from `kubectl config get-contexts`
+
+```bash
+kubectx <TAB>
+# Shows all available contexts
+
+kubectx -d <TAB>
+# Shows all contexts that can be deleted
+
+kubens <TAB>  
+# Shows all namespaces in current context
+```
+
+## Fish Completion
+
+### Installation
+
+<Steps>
+  <Step title="Locate completion scripts">
+    Fish completion scripts:
+    
+    ```bash
+    ls -l completion/kubectx.fish
+    ls -l completion/kubens.fish
+    ```
+  </Step>
+  
+  <Step title="Copy to Fish completions directory">
+    ```bash
+    # Create completions directory if it doesn't exist
+    mkdir -p ~/.config/fish/completions
+    
+    # Copy completion files
+    cp completion/kubectx.fish ~/.config/fish/completions/
+    cp completion/kubens.fish ~/.config/fish/completions/
+    ```
+  </Step>
+  
+  <Step title="Reload completions">
+    ```bash
+    # Completions are loaded automatically
+    # Or manually reload:
+    fish_update_completions
+    ```
+  </Step>
+</Steps>
+
+### Package Manager Installation
+
+<CodeGroup>
+```bash Homebrew (macOS/Linux)
+# Install kubectx
+brew install kubectx
+
+# Completions are automatically installed to:
+# $(brew --prefix)/share/fish/vendor_completions.d/
+```
+
+```bash Fisher (Fish plugin manager)
+fisher install ahmetb/kubectx
+```
+</CodeGroup>
+
+### Usage
+
+Fish provides rich completion descriptions:
+
+```bash
+kubectx <TAB>
+# Shows contexts with descriptions if available
+
+kubectx -<TAB>
+# Shows:
+-  (switch to the previous namespace in this context)
+```
+
+## Alias Completion
+
+If you use aliases for kubectx and kubens, you need to configure completion for the aliases as well.
+
+### Bash
+
+```bash
+# Add to ~/.bashrc
+alias kctx='kubectx'
+alias kns='kubens'
+
+# Enable completion for aliases
+complete -F _kube_contexts kctx
+complete -F _kube_namespaces kns
+```
+
+### Zsh
+
+```bash
+# Add to ~/.zshrc
+alias kctx='kubectx'
+alias kns='kubens'
+
+# Enable completion for aliases
+compdef kctx=kubectx
+compdef kns=kubens
+```
+
+### Fish
+
+```fish
+# Add to ~/.config/fish/config.fish
+alias kctx='kubectx'
+alias kns='kubens'
+
+# Fish automatically handles completion for aliases
+```
+
+## kubectl Plugin Completion
+
+If you're using kubectx/kubens as kubectl plugins:
+
+```bash
+# Completion works automatically through kubectl
+kubectl ctx <TAB>
+kubectl ns <TAB>
+```
+
+kubectl's built-in completion handles plugin completion.
+
+<Note>
+Make sure kubectl completion is enabled. See [kubectl completion docs](https://kubernetes.io/docs/tasks/tools/install-kubectl/#enable-shell-autocompletion) for setup.
+</Note>
+
+## Verifying Completion
+
+Test that completion is working:
+
+<Steps>
+  <Step title="Test kubectx completion">
+    ```bash
+    kubectx <TAB>
+    # Should show list of contexts
+    ```
+  </Step>
+  
+  <Step title="Test kubens completion">
+    ```bash
+    kubens <TAB>
+    # Should show list of namespaces
+    ```
+  </Step>
+  
+  <Step title="Test flag completion">
+    ```bash
+    kubectx -<TAB>
+    # Should show: - (switch to previous context)
+    ```
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+### Completion Not Working
+
+If tab completion isn't working:
+
+<Steps>
+  <Step title="Check if completion is loaded">
+    <CodeGroup>
+    ```bash Bash
+    # Check if completion function exists
+    type _kube_contexts
+    # Should show: _kube_contexts is a function
+    ```
+    
+    ```bash Zsh
+    # Check if completion is registered
+    which _kubectx
+    # Should show path to completion function
+    ```
+    
+    ```bash Fish
+    # Check if completion file exists
+    ls ~/.config/fish/completions/kubectx.fish
+    ```
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Verify shell integration">
+    Make sure bash-completion or zsh completion system is enabled:
+    
+    ```bash
+    # Bash: check if bash-completion is loaded
+    type _init_completion
+    
+    # Zsh: check if compinit is called
+    whence compinit
+    ```
+  </Step>
+  
+  <Step title="Reload shell configuration">
+    ```bash
+    exec $SHELL
+    ```
+  </Step>
+</Steps>
+
+### Completions Out of Date
+
+If new contexts/namespaces don't appear in completion:
+
+```bash
+# Completions are generated dynamically
+# They call: kubectl config get-contexts
+
+# Verify kubectl can list contexts:
+kubectl config get-contexts --output=name
+
+# If this works, completion should work too
+```
+
+### Permission Errors
+
+If you see permission errors:
+
+```bash
+# Make sure completion files are readable
+chmod +r ~/.zsh/completion/_kubectx
+chmod +r ~/.config/fish/completions/kubectx.fish
+```
+
+## Advanced Configuration
+
+### Custom Completion Behavior
+
+You can modify the completion scripts to customize behavior. For example, in Bash:
+
+```bash
+# Custom completion that excludes certain contexts
+_kube_contexts_filtered()
+{
+  local curr_arg;
+  curr_arg=${COMP_WORDS[COMP_CWORD]}
+  local contexts=$(kubectl config get-contexts --output='name' | grep -v 'test')
+  COMPREPLY=( $(compgen -W "- $contexts" -- $curr_arg ) );
+}
+
+complete -F _kube_contexts_filtered kubectx
+```
+
+### Completion Performance
+
+For large kubeconfig files, completion might be slow. Consider:
+
+1. **Caching contexts** (not implemented by default)
+2. **Using fzf interactive mode** instead of tab completion
+3. **Splitting kubeconfig** into smaller files
+
+<Tip>
+Interactive mode with fzf is often faster than tab completion for large context lists.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Interactive Mode" icon="terminal" href="/usage/interactive-mode">
+    Learn about fzf integration for visual selection
+  </Card>
+  
+  <Card title="kubectx Commands" icon="layer-group" href="/usage/kubectx">
+    Master all kubectx commands and features
+  </Card>
+</CardGroup>

@@ -1,0 +1,126 @@
+---
+title: Environment Variables
+description: Configure kubectx and kubens behavior using environment variables
+---
+
+Both `kubectx` and `kubens` can be configured through environment variables to customize their behavior, control interactive mode, and manage color output.
+
+## Interactive Mode
+
+### KUBECTX_IGNORE_FZF
+
+<ParamField path="KUBECTX_IGNORE_FZF" type="string" default="">
+  Disables interactive context/namespace selection with fzf when set to any value.
+</ParamField>
+
+By default, if you have [fzf](https://github.com/junegunn/fzf) installed, `kubectx` and `kubens` will present an interactive fuzzy-search menu. Set this variable to opt out of interactive mode:
+
+```bash
+export KUBECTX_IGNORE_FZF=1
+```
+
+<Tip>
+If you want to keep fzf interactive mode enabled but need the default behavior for a specific command, you can pipe the output:
+```bash
+kubectx | cat
+```
+</Tip>
+
+## Color Configuration
+
+### NO_COLOR
+
+<ParamField path="NO_COLOR" type="string" default="">
+  Disables color output when set to any value. Follows the [NO_COLOR standard](https://no-color.org/).
+</ParamField>
+
+To disable all colors in the output:
+
+```bash
+export NO_COLOR=1
+```
+
+### _KUBECTX_FORCE_COLOR
+
+<ParamField path="_KUBECTX_FORCE_COLOR" type="string" default="">
+  Forces color output even when stdout is not a terminal (internal use).
+</ParamField>
+
+<Warning>
+This is an internal environment variable used by kubectx/kubens when running fzf interactive mode. It's not intended for direct user configuration.
+</Warning>
+
+### KUBECTX_CURRENT_FGCOLOR (Deprecated)
+
+<ParamField path="KUBECTX_CURRENT_FGCOLOR" type="string" default="yellow">
+  Customizes the foreground (text) color for the current context/namespace. **Deprecated in Go implementation.**
+</ParamField>
+
+<Warning>
+This environment variable is deprecated in the Go implementation of kubectx/kubens (v0.9.0+). It only works with the legacy Bash-based implementation.
+</Warning>
+
+For the Bash implementation, you can customize the text color using `tput` color codes:
+
+```bash
+export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 6) # blue text
+```
+
+### KUBECTX_CURRENT_BGCOLOR (Deprecated)
+
+<ParamField path="KUBECTX_CURRENT_BGCOLOR" type="string" default="dark background">
+  Customizes the background color for the current context/namespace. **Deprecated in Go implementation.**
+</ParamField>
+
+<Warning>
+This environment variable is deprecated in the Go implementation of kubectx/kubens (v0.9.0+). It only works with the legacy Bash-based implementation.
+</Warning>
+
+For the Bash implementation, you can customize the background color using `tput` color codes:
+
+```bash
+export KUBECTX_CURRENT_BGCOLOR=$(tput setab 7) # white background
+```
+
+## Kubeconfig Location
+
+### KUBECONFIG
+
+<ParamField path="KUBECONFIG" type="string" default="~/.kube/config">
+  Specifies the path to your kubeconfig file.
+</ParamField>
+
+This is a standard Kubernetes environment variable that both `kubectl` and `kubectx`/`kubens` respect:
+
+```bash
+export KUBECONFIG=/path/to/your/kubeconfig
+```
+
+<Note>
+While kubectl supports multiple files separated by colons (e.g., `file1:file2`), kubectx/kubens currently only support a single kubeconfig file.
+</Note>
+
+## Internal/Testing Variables
+
+### DEBUG
+
+<ParamField path="DEBUG" type="string" default="">
+  Enables verbose logging for debugging (internal use).
+</ParamField>
+
+This internal variable enables more detailed logging output:
+
+```bash
+export DEBUG=1
+kubectx
+```
+
+### _MOCK_NAMESPACES
+
+<ParamField path="_MOCK_NAMESPACES" type="string" default="">
+  Used for testing purposes to mock namespace lists (internal use).
+</ParamField>
+
+<Note>
+This is an internal testing variable and should not be used in production environments.
+</Note>

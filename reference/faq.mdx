@@ -1,0 +1,532 @@
+---
+title: 'Frequently Asked Questions'
+description: 'Common questions and answers about kubectx and kubens'
+---
+
+Find answers to commonly asked questions about kubectx and kubens.
+
+## General Questions
+
+<AccordionGroup>
+  <Accordion title="What are kubectx and kubens?">
+    **kubectx** is a tool to switch between Kubernetes contexts (clusters) on kubectl faster.
+    
+    **kubens** is a tool to switch between Kubernetes namespaces (and configure them for kubectl) easily.
+    
+    Both tools are designed to make working with multiple Kubernetes clusters and namespaces more efficient by providing simple, fast commands with interactive capabilities.
+  </Accordion>
+
+  <Accordion title="What's the difference between the bash and Go implementations?">
+    Starting with v0.9.0, kubectx and kubens were rewritten in Go. Both implementations are maintained:
+    
+    **Bash implementation:**
+    - Original implementation
+    - Small bash scripts
+    - Stable and proven
+    - Still maintained for compatibility
+    
+    **Go implementation:**
+    - Newer, cross-platform compatible
+    - Better performance
+    - Receives new features
+    - Available as binaries from the [Releases page](https://github.com/ahmetb/kubectx/releases)
+    - Recommended for new installations
+    
+    Both implementations work the same way and have the same functionality.
+  </Accordion>
+
+  <Accordion title="Can I use kubectx and kubens as kubectl plugins?">
+    Yes! You can install them as kubectl plugins using [Krew](https://krew.sigs.k8s.io/):
+    
+    ```bash
+    kubectl krew install ctx
+    kubectl krew install ns
+    ```
+    
+    After installing, use them as:
+    - `kubectl ctx` instead of `kubectx`
+    - `kubectl ns` instead of `kubens`
+    
+    **Note:** Installing via Krew does not include shell completion scripts. For completions, choose another installation method or install the scripts manually.
+  </Accordion>
+
+  <Accordion title="Do I need both kubectx and kubens?">
+    No, they are independent tools. You can install and use either or both based on your needs:
+    
+    - Use **kubectx** if you work with multiple clusters
+    - Use **kubens** if you work with multiple namespaces within a cluster
+    - Use **both** if you work with multiple clusters and namespaces (most common)
+    
+    Most installation methods install both tools together.
+  </Accordion>
+</AccordionGroup>
+
+## Installation Questions
+
+<AccordionGroup>
+  <Accordion title="How do I install kubectx and kubens?">
+    There are multiple installation methods available depending on your operating system:
+    
+    **macOS/Linux:**
+    - [Homebrew](/installation#homebrew-macos-and-linux) (recommended)
+    - [Krew](/installation#kubectl-plugins-macos-and-linux) (kubectl plugin)
+    - [Manual installation](/installation#manual-installation-macos-and-linux)
+    
+    **Linux:**
+    - [apt (Debian/Ubuntu)](/installation#apt-debian)
+    - [pacman (Arch Linux)](/installation#pacman-arch-linux)
+    
+    **Windows:**
+    - [Chocolatey](/installation#windows-installation-using-chocolatey)
+    - [Scoop](/installation#windows-installation-using-scoop)
+    - [winget](/installation#windows-installation-using-winget)
+    
+    See the full [Installation guide](/installation) for detailed instructions.
+  </Accordion>
+
+  <Accordion title="How do I enable shell completion?">
+    Shell completion setup varies by installation method and shell:
+    
+    **If installed via Homebrew:**
+    Completions are set up automatically. Make sure you have [configured your shell](https://docs.brew.sh/Shell-Completion) to load Homebrew completions.
+    
+    **If installed via Krew:**
+    Completions are NOT included. Install completion scripts manually or use a different installation method.
+    
+    **Manual setup:**
+    - [zsh with antibody](/installation#completion-scripts-for-zsh-with-antibody)
+    - [plain zsh](/installation#completion-scripts-for-plain-zsh)
+    - [bash](/installation#completion-scripts-for-bash)
+    - [fish](/installation#completion-scripts-for-fish)
+    
+    See the [Installation guide](/installation) for detailed completion setup instructions.
+  </Accordion>
+
+  <Accordion title="Which installation method should I use?">
+    Recommended installation methods by platform:
+    
+    **macOS:** Homebrew
+    ```bash
+    brew install kubectx
+    ```
+    
+    **Debian/Ubuntu:** apt
+    ```bash
+    sudo apt install kubectx
+    ```
+    
+    **Arch Linux:** pacman
+    ```bash
+    sudo pacman -S kubectx
+    ```
+    
+    **Windows:** Chocolatey
+    ```pwsh
+    choco install kubens kubectx
+    ```
+    
+    **Any platform with kubectl:** Krew
+    ```bash
+    kubectl krew install ctx ns
+    ```
+    
+    These methods handle dependencies and updates automatically.
+  </Accordion>
+</AccordionGroup>
+
+## Interactive Mode Questions
+
+<AccordionGroup>
+  <Accordion title="What is interactive mode and how do I enable it?">
+    Interactive mode provides a fuzzy search interface for selecting contexts and namespaces.
+    
+    **To enable:**
+    Install [fzf](https://github.com/junegunn/fzf) on your system:
+    
+    ```bash
+    # macOS
+    brew install fzf
+    
+    # Debian/Ubuntu
+    sudo apt install fzf
+    
+    # Arch Linux
+    sudo pacman -S fzf
+    ```
+    
+    Once fzf is installed and in your `$PATH`, kubectx and kubens will automatically use interactive mode when:
+    - No arguments are provided
+    - Output is to a terminal (not piped)
+    
+    **Features:**
+    - Type to fuzzy search
+    - Arrow keys to navigate
+    - Enter to select
+    - Multi-select for deletion (kubectx -d)
+  </Accordion>
+
+  <Accordion title="How do I disable interactive mode?">
+    There are multiple ways to disable interactive mode:
+    
+    **Permanently disable:**
+    ```bash
+    export KUBECTX_IGNORE_FZF=1
+    ```
+    Add this to your `.bashrc`, `.zshrc`, or shell configuration file.
+    
+    **Temporarily disable for one command:**
+    Pipe the output to another command:
+    ```bash
+    kubectx | cat
+    kubens | cat
+    ```
+    
+    **Why disable?**
+    - Scripting and automation
+    - Preference for list view
+    - Remote sessions where fzf doesn't work well
+  </Accordion>
+
+  <Accordion title="Can I use interactive mode in scripts?">
+    No, interactive mode is designed for human use in terminals. In scripts:
+    
+    - Interactive mode is automatically disabled when output is piped
+    - Set `KUBECTX_IGNORE_FZF=1` to ensure non-interactive behavior
+    - Use explicit context/namespace names in scripts
+    
+    Example script:
+    ```bash
+    #!/bin/bash
+    export KUBECTX_IGNORE_FZF=1
+    
+    kubectx production
+    kubens backend
+    kubectl apply -f deployment.yaml
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Usage Questions
+
+<AccordionGroup>
+  <Accordion title="How do I rename a context with a long name?">
+    Use the rename syntax `NEW_NAME=OLD_NAME`:
+    
+    ```bash
+    kubectx prod=gke_my-project-123456_us-central1-a_production-cluster
+    ```
+    
+    To rename the current context:
+    ```bash
+    kubectx prod=.
+    ```
+    
+    This makes long auto-generated context names much easier to work with.
+  </Accordion>
+
+  <Accordion title="How do I switch back to the previous context/namespace?">
+    Use the `-` argument:
+    
+    ```bash
+    # Switch contexts
+    kubectx production
+    kubectx staging
+    kubectx -              # Back to production
+    
+    # Switch namespaces
+    kubens backend
+    kubens frontend
+    kubens -               # Back to backend
+    ```
+    
+    This works similar to `cd -` in shell navigation.
+  </Accordion>
+
+  <Accordion title="Can I delete multiple contexts at once?">
+    Yes, provide multiple context names to the delete command:
+    
+    ```bash
+    kubectx -d old-cluster-1 old-cluster-2 old-cluster-3
+    ```
+    
+    Or use interactive mode (requires fzf):
+    ```bash
+    kubectx -d
+    # Use Tab to multi-select contexts
+    # Press Enter to delete selected
+    ```
+  </Accordion>
+
+  <Accordion title="Does deleting a context remove the cluster configuration?">
+    No, `kubectx -d` only deletes the context entry. The associated cluster and user entries remain in your kubeconfig.
+    
+    **What gets deleted:**
+    - The context entry (mapping between cluster, user, and namespace)
+    
+    **What remains:**
+    - Cluster entry (server URL, certificate-authority, etc.)
+    - User entry (credentials, client certificates, etc.)
+    
+    To fully remove a cluster, you need to manually edit kubeconfig or use:
+    ```bash
+    kubectl config delete-cluster CLUSTER_NAME
+    kubectl config delete-user USER_NAME
+    ```
+  </Accordion>
+
+  <Accordion title="How do I use kubens with a namespace that doesn't exist yet?">
+    Use the `--force` or `-f` flag:
+    
+    ```bash
+    kubens new-namespace --force
+    ```
+    
+    This skips the validation check and sets the namespace even if it doesn't exist in the cluster. Useful for:
+    - Preparing configuration before namespace creation
+    - Automation scripts that create namespaces later
+    - Working in disconnected environments
+  </Accordion>
+
+  <Accordion title="What's the difference between 'kubectx -u' and 'kubectx -d'?">
+    **`kubectx --unset` (or `-u`):**
+    - Clears the current-context preference
+    - Does not delete any context entries
+    - Requires `--context` flag for subsequent kubectl commands
+    
+    ```bash
+    kubectx -u
+    # current-context is now empty
+    kubectl get pods --context=minikube  # Must specify context
+    ```
+    
+    **`kubectx -d` (delete):**
+    - Permanently removes context entries from kubeconfig
+    - Cannot be undone without re-adding the context
+    - If you delete the current context, current-context becomes empty
+    
+    ```bash
+    kubectx -d old-cluster
+    # Context entry is permanently removed
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Customization Questions
+
+<AccordionGroup>
+  <Accordion title="How do I customize the colors?">
+    Use the `KUBECTX_CURRENT_FGCOLOR` and `KUBECTX_CURRENT_BGCOLOR` environment variables:
+    
+    ```bash
+    # Blue text on white background
+    export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 6)
+    export KUBECTX_CURRENT_BGCOLOR=$(tput setab 7)
+    ```
+    
+    Add these to your shell configuration file (`.bashrc`, `.zshrc`, etc.) to make them permanent.
+    
+    See [tput color codes](https://linux.101hacks.com/ps1-examples/prompt-color-using-tput/) for available colors.
+    
+    To disable colors entirely:
+    ```bash
+    export NO_COLOR=1
+    ```
+  </Accordion>
+
+  <Accordion title="Can I add context/namespace to my shell prompt?">
+    Yes, use [kube-ps1](https://github.com/jonmosco/kube-ps1), a complementary tool that adds Kubernetes context and namespace information to your shell prompt.
+    
+    ```bash
+    # Install kube-ps1
+    brew install kube-ps1  # macOS
+    
+    # Add to .bashrc or .zshrc
+    source "/usr/local/opt/kube-ps1/share/kube-ps1.sh"
+    PS1='$(kube_ps1)'$PS1
+    ```
+    
+    Your prompt will show:
+    ```
+    (⎈ |minikube:default) $
+    ```
+    
+    This pairs very well with kubectx and kubens.
+  </Accordion>
+
+  <Accordion title="Where are the state files stored?">
+    **kubectx state file:**
+    - Default: `~/.kube/kubectx`
+    - Override: `$KUBECTX_STATE_DIR/kubectx`
+    - Contains: Name of the previous context
+    
+    **kubens state files:**
+    - Default: `~/.kube/kubens/`
+    - Override: `$KUBECTX_STATE_DIR/kubens/`
+    - Contains: One file per context, each storing the previous namespace for that context
+    
+    These files are plain text and managed automatically.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Why isn't interactive mode working?">
+    Interactive mode requires fzf. Check if it's installed and in your PATH:
+    
+    ```bash
+    which fzf
+    fzf --version
+    ```
+    
+    If not installed:
+    ```bash
+    # macOS
+    brew install fzf
+    
+    # Debian/Ubuntu
+    sudo apt install fzf
+    
+    # Arch Linux
+    sudo pacman -S fzf
+    ```
+    
+    Also check if you've disabled it:
+    ```bash
+    echo $KUBECTX_IGNORE_FZF
+    # If this prints "1", interactive mode is disabled
+    ```
+  </Accordion>
+
+  <Accordion title="Why isn't tab completion working?">
+    Tab completion requires proper installation of completion scripts:
+    
+    **1. Verify completion scripts are installed:**
+    ```bash
+    # For bash
+    ls $(pkg-config --variable=completionsdir bash-completion)
+    
+    # For zsh
+    echo $fpath
+    # Completion files should be in one of these directories
+    ```
+    
+    **2. Check your installation method:**
+    - Homebrew: Should work automatically if [shell completion is configured](https://docs.brew.sh/Shell-Completion)
+    - Krew: Does NOT include completions, install manually
+    - Manual: Follow the [completion setup guide](/installation)
+    
+    **3. Reload your shell:**
+    ```bash
+    exec $SHELL
+    ```
+    
+    **4. For zsh, you may need:**
+    ```bash
+    autoload -U compinit && compinit
+    ```
+  </Accordion>
+
+  <Accordion title="I get 'context not found' or 'namespace not found' errors">
+    **For contexts:**
+    ```bash
+    # List available contexts
+    kubectx
+    
+    # Or use kubectl
+    kubectl config get-contexts
+    ```
+    
+    Make sure the context exists in your kubeconfig. Context names are case-sensitive.
+    
+    **For namespaces:**
+    ```bash
+    # List available namespaces
+    kubens
+    
+    # Or use kubectl
+    kubectl get namespaces
+    ```
+    
+    If the namespace doesn't exist but you want to set it anyway:
+    ```bash
+    kubens my-namespace --force
+    ```
+  </Accordion>
+
+  <Accordion title="Changes aren't persisting after I close my terminal">
+    This shouldn't happen. kubectx and kubens modify your kubeconfig file directly, which is persistent.
+    
+    **Check if:**
+    1. You have write permissions to your kubeconfig:
+       ```bash
+       ls -l ~/.kube/config
+       ```
+    
+    2. You're using a custom kubeconfig location:
+       ```bash
+       echo $KUBECONFIG
+       ```
+    
+    3. Another process is overwriting your kubeconfig
+    
+    4. You're in a different context than you think:
+       ```bash
+       kubectx -c
+       kubens -c
+       ```
+  </Accordion>
+</AccordionGroup>
+
+## Integration Questions
+
+<AccordionGroup>
+  <Accordion title="Can I use kubectx/kubens in CI/CD pipelines?">
+    Yes, but disable interactive mode:
+    
+    ```bash
+    export KUBECTX_IGNORE_FZF=1
+    
+    kubectx production
+    kubens backend
+    kubectl apply -f deployment.yaml
+    ```
+    
+    Alternatively, use `kubectl config` commands which may be more explicit for CI/CD:
+    ```bash
+    kubectl config use-context production
+    kubectl config set-context --current --namespace=backend
+    ```
+  </Accordion>
+
+  <Accordion title="Are kubectx and kubens compatible with all kubectl versions?">
+    Yes, kubectx and kubens work with the kubeconfig file format, which is standard across all kubectl versions. They are kubectl-version agnostic.
+    
+    They work with:
+    - All kubectl versions
+    - Any tool that uses kubeconfig (helm, k9s, etc.)
+    - Multiple kubeconfig files (via `$KUBECONFIG` environment variable)
+  </Accordion>
+
+  <Accordion title="Do kubectx and kubens work with multiple kubeconfig files?">
+    Yes, they respect the `$KUBECONFIG` environment variable:
+    
+    ```bash
+    # Single kubeconfig
+    export KUBECONFIG=~/.kube/config
+    
+    # Multiple kubeconfigs (colon-separated)
+    export KUBECONFIG=~/.kube/config:~/.kube/config-prod:~/.kube/config-dev
+    ```
+    
+    kubectx and kubens will read and write to the merged view of all specified kubeconfig files.
+  </Accordion>
+</AccordionGroup>
+
+## Still Have Questions?
+
+If you didn't find your answer here:
+
+1. Check the [GitHub Issues](https://github.com/ahmetb/kubectx/issues) for similar questions
+2. Review the [command reference](/reference/kubectx-commands) for detailed usage
+3. Open a [new issue](https://github.com/ahmetb/kubectx/issues/new) on GitHub

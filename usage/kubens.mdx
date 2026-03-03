@@ -1,0 +1,303 @@
+---
+title: kubens Commands
+description: Complete guide to kubens commands for managing Kubernetes namespaces
+---
+
+kubens is a utility to switch between Kubernetes namespaces quickly. It provides a faster way to change the active namespace than using `kubectl config set-context --current --namespace`.
+
+## Basic Usage
+
+### List All Namespaces
+
+Display all namespaces in the current context:
+
+```bash
+kubens
+```
+
+**Example output:**
+```
+default
+kube-system
+kube-public
+kube-node-lease
+production
+staging
+development
+```
+
+The current active namespace is highlighted with a different color.
+
+### Switch to a Namespace
+
+Switch to a specific namespace by name:
+
+```bash
+kubens <namespace-name>
+```
+
+<Steps>
+  <Step title="Switch namespace">
+    ```bash
+    kubens production
+    ```
+    **Output:**
+    ```
+    Active namespace is "production".
+    ```
+  </Step>
+  
+  <Step title="Verify the switch">
+    ```bash
+    kubectl config view --minify --output 'jsonpath={..namespace}'
+    ```
+    **Output:**
+    ```
+    production
+    ```
+  </Step>
+</Steps>
+
+<Note>
+All subsequent `kubectl` commands will operate in the selected namespace by default.
+</Note>
+
+### Switch to Previous Namespace
+
+Quickly switch back to the previous namespace using the `-` shorthand:
+
+```bash
+kubens -
+```
+
+**Example:**
+```bash
+# Currently in 'production'
+kubens staging
+# Active namespace is "staging".
+
+kubens -
+# Active namespace is "production".
+```
+
+<Tip>
+The `-` shorthand works like `cd -` in bash, allowing you to quickly toggle between two namespaces in the current context.
+</Tip>
+
+## Namespace Operations
+
+### Show Current Namespace
+
+Display the currently active namespace:
+
+```bash
+kubens -c
+# or
+kubens --current
+```
+
+**Output:**
+```
+production
+```
+
+If no namespace is set:
+```
+(namespace not set)
+```
+
+### Force Switch to Namespace
+
+Switch to a namespace even if it doesn't exist (useful for creating it later):
+
+```bash
+kubens <namespace-name> --force
+# or
+kubens <namespace-name> -f
+```
+
+**Example:**
+```bash
+kubens new-feature --force
+# Active namespace is "new-feature".
+
+# The namespace doesn't exist yet
+kubectl get pods
+# Error from server (NotFound): namespaces "new-feature" not found
+
+# Create the namespace
+kubectl create namespace new-feature
+# namespace/new-feature created
+
+# Now kubectl commands work
+kubectl get pods
+# No resources found in new-feature namespace.
+```
+
+<Warning>
+By default, kubens validates that the namespace exists before switching. Use `--force` only when you're sure you want to set a namespace that doesn't exist yet.
+</Warning>
+
+## Command Reference
+
+### All Commands
+
+| Command | Description |
+|---------|-------------|
+| `kubens` | List all namespaces |
+| `kubens <NAME>` | Switch to namespace NAME |
+| `kubens <NAME> -f` | Force switch to NAME (even if it doesn't exist) |
+| `kubens -` | Switch to previous namespace |
+| `kubens -c, --current` | Show current namespace |
+| `kubens -h, --help` | Show help message |
+| `kubens -V, --version` | Show version |
+
+### Using as kubectl Plugin
+
+kubens can also be used as a kubectl plugin:
+
+```bash
+kubectl ns
+kubectl ns production
+kubectl ns -
+```
+
+<Tip>
+When installed as a kubectl plugin (as `kubectl-ns`), all the same commands work with `kubectl ns` instead of `kubens`.
+</Tip>
+
+## Practical Examples
+
+### Working Across Namespaces
+
+```bash
+# Check what namespaces are available
+kubens
+
+# Switch to production to check status
+kubens production
+# Active namespace is "production".
+
+kubectl get pods
+# Lists pods in production
+
+# Quick check in staging
+kubens staging
+# Active namespace is "staging".
+
+kubectl get pods
+# Lists pods in staging
+
+# Jump back to production
+kubens -
+# Active namespace is "production".
+```
+
+### Development Workflow
+
+```bash
+# Start in your feature namespace
+kubens feature-auth-refactor
+# Active namespace is "feature-auth-refactor".
+
+# Deploy your changes
+kubectl apply -f deployment.yaml
+
+# Test against staging data
+kubens staging
+kubectl port-forward svc/database 5432:5432
+
+# Back to your feature namespace
+kubens -
+
+# Run integration tests
+kubectl logs -f deployment/api
+```
+
+### Multi-Cluster Namespace Management
+
+kubens works with the current context. Combine with kubectx for multi-cluster workflows:
+
+```bash
+# Switch to dev cluster
+kubectx dev-cluster
+# Switched to context "dev-cluster".
+
+# Switch to your namespace in dev
+kubens my-feature
+# Active namespace is "my-feature".
+
+# Switch to staging cluster
+kubectx staging-cluster
+# Switched to context "staging-cluster".
+
+# Switch to same namespace in staging
+kubens my-feature
+# Active namespace is "my-feature".
+```
+
+<Note>
+kubens stores the previous namespace **per context**. Each context maintains its own history, so switching contexts doesn't affect your namespace history.
+</Note>
+
+## Understanding Namespace Validation
+
+By default, kubens validates that the namespace exists by querying the Kubernetes API:
+
+```bash
+# This will fail if namespace doesn't exist
+kubens nonexistent
+# Error: no namespace exists with name "nonexistent"
+
+# Override validation with --force
+kubens nonexistent --force
+# Active namespace is "nonexistent".
+```
+
+<Tip>
+Namespace validation requires cluster connectivity. If you're offline or the cluster is unreachable, use `--force` to set the namespace anyway.
+</Tip>
+
+## Troubleshooting
+
+### No Current Context
+
+If you see an error about no current context:
+
+```bash
+kubens
+# Error: current-context is not set
+```
+
+Set a context first using kubectx:
+```bash
+kubectx minikube
+kubens
+```
+
+### Cluster Not Accessible
+
+If the cluster is not accessible, namespace validation fails:
+
+```bash
+kubens production
+# Error: failed to query if namespace exists (is cluster accessible?)
+```
+
+Use `--force` to set the namespace anyway:
+```bash
+kubens production --force
+# Active namespace is "production".
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Interactive Mode" icon="terminal" href="/usage/interactive-mode">
+    Use fzf for interactive namespace selection
+  </Card>
+  
+  <Card title="kubectx Commands" icon="layer-group" href="/usage/kubectx">
+    Learn about managing contexts with kubectx
+  </Card>
+</CardGroup>

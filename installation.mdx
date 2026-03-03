@@ -1,0 +1,260 @@
+---
+title: 'Installation'
+description: 'Install kubectx and kubens on macOS, Linux, and Windows'
+---
+
+# Installation
+
+kubectx and kubens are available through multiple package managers and installation methods. Choose the one that works best for your system.
+
+<Note>
+Starting with v0.9.0, kubectx and kubens are rewritten in Go. Download the latest binaries from the [Releases page](https://github.com/ahmetb/kubectx/releases).
+</Note>
+
+## Kubectl Plugins (Krew)
+
+Install as kubectl plugins using the [Krew](https://github.com/kubernetes-sigs/krew/) plugin manager.
+
+<Steps>
+  <Step title="Install with Krew">
+    <CodeGroup>
+    ```bash Install kubectx
+    kubectl krew install ctx
+    ```
+    
+    ```bash Install kubens
+    kubectl krew install ns
+    ```
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Use as kubectl plugins">
+    After installation, the tools are available as `kubectl ctx` and `kubectl ns`:
+    
+    ```bash
+    kubectl ctx minikube
+    kubectl ns kube-system
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+Krew installation does not include shell completion scripts. For completions, choose another installation method or install the scripts manually.
+</Warning>
+
+## macOS Installation
+
+### Homebrew
+
+The recommended way to install on macOS.
+
+<Steps>
+  <Step title="Install with Homebrew">
+    ```bash
+    brew install kubectx
+    ```
+    
+    This installs both `kubectx` and `kubens`.
+  </Step>
+  
+  <Step title="Configure shell completion">
+    Homebrew automatically sets up bash/zsh/fish completion scripts. Make sure your shell is [configured to load Homebrew completions](https://docs.brew.sh/Shell-Completion).
+  </Step>
+</Steps>
+
+### MacPorts
+
+If you use [MacPorts](https://www.macports.org):
+
+```bash
+sudo port install kubectx
+```
+
+## Linux Installation
+
+### Debian/Ubuntu (apt)
+
+<Steps>
+  <Step title="Install from apt repository">
+    ```bash
+    sudo apt install kubectx
+    ```
+  </Step>
+  
+  <Step title="Optional: Use testing/unstable repos for newer versions">
+    Newer versions may be available in:
+    - [Debian Buster (testing)](https://packages.debian.org/buster/kubectx)
+    - [Sid (unstable)](https://packages.debian.org/sid/kubectx)
+    
+    See the [Debian Wiki](https://wiki.debian.org/DebianReleases) for information on enabling these repositories.
+  </Step>
+</Steps>
+
+### Arch Linux (pacman)
+
+Available as an official Arch Linux package:
+
+```bash
+sudo pacman -S kubectx
+```
+
+### Homebrew on Linux
+
+If you use [Homebrew](https://brew.sh/) on Linux:
+
+```bash
+brew install kubectx
+```
+
+## Windows Installation
+
+### Chocolatey
+
+Install using [Chocolatey](https://chocolatey.org/):
+
+```powershell
+choco install kubens kubectx
+```
+
+### Scoop
+
+Install using [Scoop](https://scoop.sh/):
+
+<Steps>
+  <Step title="Add the main bucket (if not already added)">
+    ```powershell
+    scoop bucket add main
+    ```
+  </Step>
+  
+  <Step title="Install kubectx and kubens">
+    ```powershell
+    scoop install main/kubens main/kubectx
+    ```
+  </Step>
+</Steps>
+
+### winget
+
+Install using [winget](https://learn.microsoft.com/en-us/windows/package-manager/):
+
+<CodeGroup>
+```powershell Install kubectx
+winget install --id ahmetb.kubectx
+```
+
+```powershell Install kubens
+winget install --id ahmetb.kubens
+```
+</CodeGroup>
+
+## Manual Installation (macOS and Linux)
+
+For POSIX environments with Bash installed.
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    sudo git clone https://github.com/ahmetb/kubectx /opt/kubectx
+    ```
+  </Step>
+  
+  <Step title="Create symlinks">
+    ```bash
+    sudo ln -s /opt/kubectx/kubectx /usr/local/bin/kubectx
+    sudo ln -s /opt/kubectx/kubens /usr/local/bin/kubens
+    ```
+  </Step>
+  
+  <Step title="Make scripts executable">
+    ```bash
+    sudo chmod +x /opt/kubectx/kubectx /opt/kubectx/kubens
+    ```
+  </Step>
+</Steps>
+
+### Shell Completion Setup
+
+After manual installation, set up completion scripts for your shell:
+
+<CodeGroup>
+```bash Zsh with oh-my-zsh
+mkdir -p ~/.oh-my-zsh/custom/completions
+chmod -R 755 ~/.oh-my-zsh/custom/completions
+ln -s /opt/kubectx/completion/_kubectx.zsh ~/.oh-my-zsh/custom/completions/_kubectx.zsh
+ln -s /opt/kubectx/completion/_kubens.zsh ~/.oh-my-zsh/custom/completions/_kubens.zsh
+echo "fpath=($ZSH/custom/completions $fpath)" >> ~/.zshrc
+```
+
+```bash Bash
+git clone https://github.com/ahmetb/kubectx.git ~/.kubectx
+COMPDIR=$(pkg-config --variable=completionsdir bash-completion)
+ln -sf ~/.kubectx/completion/kubens.bash $COMPDIR/kubens
+ln -sf ~/.kubectx/completion/kubectx.bash $COMPDIR/kubectx
+cat << EOF >> ~/.bashrc
+
+# kubectx and kubens
+export PATH=~/.kubectx:\$PATH
+EOF
+```
+
+```fish Fish
+mkdir -p ~/.config/fish/completions
+ln -s /opt/kubectx/completion/kubectx.fish ~/.config/fish/completions/
+ln -s /opt/kubectx/completion/kubens.fish ~/.config/fish/completions/
+```
+</CodeGroup>
+
+<Tip>
+If zsh completion doesn't work, add `autoload -U compinit && compinit` to your `.zshrc`.
+</Tip>
+
+## Interactive Mode with fzf
+
+For interactive fuzzy search, install [fzf](https://github.com/junegunn/fzf):
+
+<CodeGroup>
+```bash Homebrew
+brew install fzf
+```
+
+```bash Debian/Ubuntu
+sudo apt install fzf
+```
+
+```bash Arch Linux
+sudo pacman -S fzf
+```
+</CodeGroup>
+
+<Note>
+To opt out of fzf interactive mode, set the environment variable: `KUBECTX_IGNORE_FZF=1`
+</Note>
+
+## Verify Installation
+
+After installation, verify both tools are available:
+
+```bash
+kubectx --help
+kubens --help
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="kubectx Usage"
+    icon="server"
+    href="/usage/kubectx"
+  >
+    Learn how to use kubectx to manage contexts
+  </Card>
+  <Card
+    title="kubens Usage"
+    icon="cube"
+    href="/usage/kubens"
+  >
+    Learn how to use kubens to manage namespaces
+  </Card>
+</CardGroup>

@@ -1,0 +1,465 @@
+---
+title: Troubleshooting
+description: Common issues and solutions when using kubectx and kubens
+---
+
+This guide covers common issues you might encounter when using kubectx and kubens, along with their solutions.
+
+## Installation Issues
+
+### Command Not Found
+
+If you get `command not found` errors after installation:
+
+<Steps>
+  <Step title="Check if the binary exists">
+    Verify the installation location:
+
+    ```bash
+    which kubectx
+    which kubens
+    ```
+  </Step>
+
+  <Step title="Verify PATH">
+    Ensure the installation directory is in your PATH:
+
+    ```bash
+    echo $PATH
+    ```
+
+    If the installation directory isn't listed, add it to your `~/.bashrc` or `~/.zshrc`:
+
+    ```bash
+    export PATH="/usr/local/bin:$PATH"
+    # Or for manual installation:
+    export PATH="$HOME/.kubectx:$PATH"
+    ```
+  </Step>
+
+  <Step title="Reload shell configuration">
+    ```bash
+    source ~/.bashrc  # or ~/.zshrc
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  For kubectl plugin installation via Krew, ensure Krew's bin directory is in your PATH: `$HOME/.krew/bin`
+</Note>
+
+### Permission Denied
+
+If you encounter permission errors:
+
+```bash
+# Make the scripts executable
+chmod +x /path/to/kubectx
+chmod +x /path/to/kubens
+
+# Or for Homebrew installation issues:
+sudo chown -R $(whoami) /usr/local/bin
+```
+
+## Context Switching Issues
+
+### Context Not Found
+
+**Error**: `error: no context exists with the name: "context-name"`
+
+<Accordion title="Solution: Verify context exists">
+  List all available contexts:
+
+  ```bash
+  kubectx
+  # Or using kubectl:
+  kubectl config get-contexts
+  ```
+
+  If the context doesn't exist, you need to add it to your kubeconfig:
+
+  ```bash
+  kubectl config set-context context-name --cluster=cluster-name --user=user-name
+  ```
+</Accordion>
+
+### Unable to Switch Context
+
+**Error**: `error: unable to read client config`
+
+<Accordion title="Solution: Check kubeconfig file">
+  Verify your kubeconfig file is valid:
+
+  ```bash
+  # Check kubeconfig location
+  echo $KUBECONFIG
+  # Default: ~/.kube/config
+
+  # Validate kubeconfig syntax
+  kubectl config view
+
+  # Check file permissions
+  ls -la ~/.kube/config
+  # Should be readable: -rw-------
+  ```
+
+  Fix permissions if needed:
+
+  ```bash
+  chmod 600 ~/.kube/config
+  ```
+</Accordion>
+
+### Previous Context Not Working
+
+**Issue**: `kubectx -` doesn't switch to the previous context
+
+<Accordion title="Solution: Understand context history">
+  The previous context is only stored after you make a switch:
+
+  ```bash
+  # First switch establishes history
+  kubectx context-a
+
+  # Now switch to another
+  kubectx context-b
+
+  # Now you can go back
+  kubectx -  # Returns to context-a
+  ```
+
+  The history is stored in `~/.kube/kubectx`. If this file is missing or corrupted:
+
+  ```bash
+  # Check if history file exists
+  cat ~/.kube/kubectx
+
+  # Remove if corrupted
+  rm ~/.kube/kubectx
+  ```
+</Accordion>
+
+## Namespace Switching Issues
+
+### Namespace Not Found
+
+**Error**: `error: namespaces "namespace-name" not found`
+
+<Accordion title="Solution: Force switch or create namespace">
+  **Option 1**: Force switch (namespace will be set even if it doesn't exist):
+
+  ```bash
+  kubens namespace-name --force
+  # Or short form:
+  kubens namespace-name -f
+  ```
+
+  **Option 2**: Create the namespace first:
+
+  ```bash
+  kubectl create namespace namespace-name
+  kubens namespace-name
+  ```
+
+  **Option 3**: List available namespaces:
+
+  ```bash
+  kubens
+  # Or:
+  kubectl get namespaces
+  ```
+</Accordion>
+
+### Changes Not Persisting
+
+**Issue**: Namespace changes don't persist across terminal sessions
+
+<Accordion title="Solution: Verify kubeconfig updates">
+  kubens modifies your kubeconfig file. Verify the changes:
+
+  ```bash
+  # Check current namespace in config
+  kubectl config view --minify | grep namespace:
+
+  # Ensure you're not overriding with KUBECONFIG
+  echo $KUBECONFIG
+
+  # Check if another process is modifying kubeconfig
+  ls -la ~/.kube/config
+  ```
+
+  Make sure your shell isn't setting a default namespace on startup.
+</Accordion>
+
+## Interactive Mode (fzf) Issues
+
+### fzf Not Working
+
+**Issue**: Interactive mode doesn't start even with fzf installed
+
+<Accordion title="Solution: Verify fzf installation and configuration">
+  <Steps>
+    <Step title="Verify fzf is in PATH">
+      ```bash
+      which fzf
+      fzf --version
+      ```
+    </Step>
+
+    <Step title="Check KUBECTX_IGNORE_FZF">
+      Make sure fzf isn't disabled:
+
+      ```bash
+      echo $KUBECTX_IGNORE_FZF
+      # Should be empty or undefined
+
+      # Unset if needed:
+      unset KUBECTX_IGNORE_FZF
+      ```
+    </Step>
+
+    <Step title="Test fzf directly">
+      ```bash
+      echo -e "option1\noption2\noption3" | fzf
+      ```
+
+      If this doesn't work, reinstall fzf.
+    </Step>
+  </Steps>
+</Accordion>
+
+### fzf Display Issues
+
+**Issue**: Interactive mode appears broken or garbled
+
+<Accordion title="Solution: Terminal compatibility">
+  ```bash
+  # Check terminal type
+  echo $TERM
+
+  # Try setting a compatible TERM
+  export TERM=xterm-256color
+
+  # Update fzf options for better compatibility
+  export FZF_DEFAULT_OPTS='--height 40% --reverse --border'
+  ```
+</Accordion>
+
+## Shell Completion Issues
+
+### Tab Completion Not Working
+
+<Accordion title="Solution: Install and configure completion scripts">
+  **For bash**:
+
+  ```bash
+  # Check if completion script is sourced
+  complete -p kubectx kubens
+
+  # Install completion manually
+  git clone https://github.com/ahmetb/kubectx.git ~/.kubectx
+  COMPDIR=$(pkg-config --variable=completionsdir bash-completion)
+  ln -sf ~/.kubectx/completion/kubens.bash $COMPDIR/kubens
+  ln -sf ~/.kubectx/completion/kubectx.bash $COMPDIR/kubectx
+
+  # Reload
+  source ~/.bashrc
+  ```
+
+  **For zsh**:
+
+  ```bash
+  # Check fpath
+  echo $fpath
+
+  # Install completion
+  mkdir -p ~/.oh-my-zsh/custom/completions
+  ln -s /path/to/kubectx/completion/_kubectx.zsh ~/.oh-my-zsh/custom/completions/_kubectx.zsh
+  ln -s /path/to/kubectx/completion/_kubens.zsh ~/.oh-my-zsh/custom/completions/_kubens.zsh
+
+  # Add to fpath in ~/.zshrc
+  fpath=($ZSH/custom/completions $fpath)
+
+  # Reload completions
+  autoload -U compinit && compinit
+  ```
+
+  **For fish**:
+
+  ```bash
+  mkdir -p ~/.config/fish/completions
+  ln -s /path/to/kubectx/completion/kubectx.fish ~/.config/fish/completions/
+  ln -s /path/to/kubectx/completion/kubens.fish ~/.config/fish/completions/
+  ```
+</Accordion>
+
+<Warning>
+  Krew installation does not include completion scripts. Use Homebrew or manual installation if you need completions.
+</Warning>
+
+## kubectl Plugin Issues
+
+### Plugin Not Found
+
+**Error**: `Error: unknown command "ctx" for "kubectl"`
+
+<Accordion title="Solution: Verify Krew installation">
+  ```bash
+  # Check if Krew is installed
+  kubectl krew version
+
+  # List installed plugins
+  kubectl plugin list
+
+  # Reinstall if needed
+  kubectl krew uninstall ctx ns
+  kubectl krew install ctx ns
+
+  # Ensure Krew bin directory is in PATH
+  export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+  ```
+</Accordion>
+
+### Version Conflicts
+
+**Issue**: Different behavior between `kubectx` and `kubectl ctx`
+
+<Accordion title="Solution: Ensure version consistency">
+  ```bash
+  # Check versions
+  kubectx --version
+  kubectl ctx --version
+
+  # Update both to latest
+  brew upgrade kubectx  # If using Homebrew
+  kubectl krew upgrade ctx ns  # If using Krew
+  ```
+</Accordion>
+
+## Performance Issues
+
+### Slow Context/Namespace Switching
+
+<Accordion title="Solution: Check kubeconfig size and network">
+  Large kubeconfig files can slow down operations:
+
+  ```bash
+  # Check kubeconfig size
+  ls -lh ~/.kube/config
+
+  # View number of contexts
+  kubectl config get-contexts --no-headers | wc -l
+
+  # Clean up unused contexts
+  kubectl config delete-context unused-context
+
+  # Split kubeconfig if too large
+  export KUBECONFIG=~/.kube/config:~/.kube/config-prod:~/.kube/config-dev
+  ```
+
+  Disable network validation if clusters are slow/unavailable:
+
+  ```bash
+  # Switch without validating cluster availability
+  kubectx context-name
+  # The tool doesn't validate connectivity, but kubectl commands will
+  ```
+</Accordion>
+
+## Color Display Issues
+
+### Colors Not Showing or Wrong Colors
+
+<Accordion title="Solution: Configure color settings">
+  ```bash
+  # Check if colors are disabled
+  echo $NO_COLOR
+  unset NO_COLOR
+
+  # Customize colors
+  export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 2)  # Green text
+  export KUBECTX_CURRENT_BGCOLOR=$(tput setab 0)  # Black background
+
+  # Test tput colors
+  for i in {0..7}; do
+    echo "$(tput setaf $i)Color $i$(tput sgr0)"
+  done
+
+  # Disable colors if terminal doesn't support them
+  export NO_COLOR=1
+  ```
+</Accordion>
+
+## Integration Issues
+
+### kube-ps1 Not Updating
+
+<Accordion title="Solution: Refresh kube-ps1 configuration">
+  ```bash
+  # Reload kube-ps1
+  source /path/to/kube-ps1.sh
+
+  # Turn it off and on
+  kubeoff
+  kubeon
+
+  # Check if PROMPT_COMMAND is set (bash)
+  echo $PROMPT_COMMAND
+
+  # For zsh, check precmd hooks
+  echo $precmd_functions
+  ```
+</Accordion>
+
+## Getting Help
+
+If you're still experiencing issues:
+
+<Steps>
+  <Step title="Check the help output">
+    ```bash
+    kubectx --help
+    kubens --help
+    ```
+  </Step>
+
+  <Step title="Verify your environment">
+    ```bash
+    # System info
+    uname -a
+
+    # Shell version
+    echo $SHELL
+    $SHELL --version
+
+    # kubectl version
+    kubectl version --client
+
+    # kubectx/kubens version
+    kubectx --version
+    kubens --version
+    ```
+  </Step>
+
+  <Step title="Check GitHub issues">
+    Search existing issues: [kubectx GitHub Issues](https://github.com/ahmetb/kubectx/issues)
+  </Step>
+
+  <Step title="Report a bug">
+    If you found a new issue, create a detailed bug report including:
+    - Operating system and version
+    - Shell type and version
+    - Installation method
+    - Complete error message
+    - Steps to reproduce
+  </Step>
+</Steps>
+
+<Tip>
+  Enable debug output by running commands with verbose flags or checking kubectl config directly:
+  
+  ```bash
+  kubectl config view --minify
+  kubectl config current-context
+  ```
+</Tip>

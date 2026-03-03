@@ -1,0 +1,447 @@
+---
+title: 'kubectx Command Reference'
+description: 'Complete reference guide for all kubectx commands, flags, and options'
+---
+
+`kubectx` is a powerful command-line tool for switching between Kubernetes contexts (clusters) quickly and efficiently.
+
+## Overview
+
+The `kubectx` command can be invoked as either:
+- `kubectx` - standalone binary
+- `kubectl ctx` - as a kubectl plugin
+
+All commands and examples below work with either invocation method.
+
+## Commands
+
+### List Contexts
+
+<ParamField body="kubectx" type="command">
+  Lists all available contexts from your kubeconfig file.
+</ParamField>
+
+**Usage:**
+```bash
+kubectx
+```
+
+**Behavior:**
+- If `fzf` is installed and output is to a terminal, launches interactive fuzzy search mode
+- Otherwise, displays a list of all contexts with the current context highlighted
+- The current context is marked with a different color (customizable via environment variables)
+
+**Example:**
+```bash
+$ kubectx
+minikube
+oregon
+gke_project_us-west1_cluster-1
+```
+
+---
+
+### Switch Context
+
+<ParamField body="kubectx <NAME>" type="command">
+  Switches to the specified context.
+</ParamField>
+
+**Parameters:**
+- `<NAME>` - The name of the context to switch to
+
+**Usage:**
+```bash
+kubectx <NAME>
+```
+
+**Example:**
+```bash
+$ kubectx minikube
+Switched to context "minikube".
+```
+
+---
+
+### Switch to Previous Context
+
+<ParamField body="kubectx -" type="command">
+  Switches back to the previously active context.
+</ParamField>
+
+**Usage:**
+```bash
+kubectx -
+```
+
+**Behavior:**
+- Maintains a state file tracking the previous context
+- Allows quick toggling between two contexts
+- Similar to `cd -` in shell navigation
+
+**Example:**
+```bash
+$ kubectx oregon
+Switched to context "oregon".
+
+$ kubectx minikube
+Switched to context "minikube".
+
+$ kubectx -
+Switched to context "oregon".
+```
+
+---
+
+### Show Current Context
+
+<ParamField body="kubectx --current" type="command">
+  Displays the name of the current active context.
+</ParamField>
+
+**Aliases:** `-c`, `--current`
+
+**Usage:**
+```bash
+kubectx --current
+kubectx -c
+```
+
+**Example:**
+```bash
+$ kubectx -c
+minikube
+```
+
+**Use Cases:**
+- Shell scripting and automation
+- Display in shell prompts (PS1)
+- CI/CD pipeline validation
+
+---
+
+### Rename Context
+
+<ParamField body="kubectx <NEW_NAME>=<NAME>" type="command">
+  Renames an existing context to a new name.
+</ParamField>
+
+**Syntax:**
+```bash
+kubectx <NEW_NAME>=<NAME>
+kubectx <NEW_NAME>=.        # Rename current context
+```
+
+**Parameters:**
+- `<NEW_NAME>` - The desired new name for the context
+- `<NAME>` - The existing context name to rename, or `.` for current context
+
+**Behavior:**
+- If the new name already exists, it will be overwritten with a warning
+- If renaming the current context, the current-context preference is updated
+- Does not affect the cluster or user entries in kubeconfig
+
+**Examples:**
+```bash
+# Rename a specific context
+$ kubectx dublin=gke_ahmetb_europe-west1-b_dublin
+Context "gke_ahmetb_europe-west1-b_dublin" renamed to "dublin".
+
+# Rename the current context
+$ kubectx prod=.
+Context "minikube" renamed to "prod".
+```
+
+---
+
+### Unset Current Context
+
+<ParamField body="kubectx --unset" type="command">
+  Removes the current-context preference from kubeconfig.
+</ParamField>
+
+**Aliases:** `-u`, `--unset`
+
+**Usage:**
+```bash
+kubectx --unset
+kubectx -u
+```
+
+**Behavior:**
+- Clears the `current-context` field in kubeconfig
+- kubectl commands will require explicit `--context` flag afterward
+- Does not delete any context entries
+
+**Example:**
+```bash
+$ kubectx --unset
+Active context unset for kubectl.
+```
+
+---
+
+### Delete Context
+
+<ParamField body="kubectx -d <NAME> [<NAME>...]" type="command">
+  Deletes one or more context entries from kubeconfig.
+</ParamField>
+
+**Aliases:** `-d`
+
+**Syntax:**
+```bash
+kubectx -d <NAME> [<NAME>...]
+kubectx -d .                    # Delete current context
+```
+
+**Parameters:**
+- `<NAME>` - One or more context names to delete
+- `.` - Special value to delete the current context
+
+**Behavior:**
+- Can delete multiple contexts in a single command
+- If `fzf` is installed and no names provided, launches interactive deletion mode
+- Does not delete the associated user or cluster entries
+- Warns if you delete the current context
+
+**Examples:**
+```bash
+# Delete a specific context
+$ kubectx -d old-cluster
+Deleted context old-cluster.
+
+# Delete multiple contexts
+$ kubectx -d context1 context2 context3
+Deleted context context1.
+Deleted context context2.
+Deleted context context3.
+
+# Delete current context
+$ kubectx -d .
+You deleted the current context. Use "kubectx" to select a new context.
+Deleted context minikube.
+
+# Interactive deletion (with fzf)
+$ kubectx -d
+# Opens fzf for selection
+```
+
+---
+
+### Display Help
+
+<ParamField body="kubectx --help" type="command">
+  Shows usage information and command reference.
+</ParamField>
+
+**Aliases:** `-h`, `--help`
+
+**Usage:**
+```bash
+kubectx --help
+kubectx -h
+```
+
+---
+
+### Display Version
+
+<ParamField body="kubectx --version" type="command">
+  Shows the version of kubectx.
+</ParamField>
+
+**Aliases:** `-V`, `--version`
+
+**Usage:**
+```bash
+kubectx --version
+kubectx -V
+```
+
+---
+
+## Interactive Mode
+
+When `fzf` is installed and stdout is a terminal, `kubectx` launches interactive mode for certain commands:
+
+### Interactive Context Selection
+
+Running `kubectx` without arguments opens an interactive fuzzy finder:
+
+```bash
+$ kubectx
+# Opens fzf with list of contexts
+# Type to filter, use arrow keys to select
+# Press Enter to switch to selected context
+```
+
+### Interactive Context Deletion
+
+Running `kubectx -d` without context names opens interactive deletion:
+
+```bash
+$ kubectx -d
+# Opens fzf with list of contexts
+# Select contexts to delete (multi-select with Tab)
+# Press Enter to confirm deletion
+```
+
+### Disabling Interactive Mode
+
+To disable `fzf` integration:
+
+```bash
+export KUBECTX_IGNORE_FZF=1
+```
+
+Or pipe output to another command:
+
+```bash
+kubectx | cat    # Forces non-interactive mode
+```
+
+---
+
+## Environment Variables
+
+### Color Customization
+
+<ParamField path="KUBECTX_CURRENT_FGCOLOR" type="string">
+  Foreground color for the current context indicator.
+</ParamField>
+
+<ParamField path="KUBECTX_CURRENT_BGCOLOR" type="string">
+  Background color for the current context indicator.
+</ParamField>
+
+**Usage:**
+```bash
+export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 6)  # blue text
+export KUBECTX_CURRENT_BGCOLOR=$(tput setab 7)  # white background
+```
+
+Refer to [tput color codes](https://linux.101hacks.com/ps1-examples/prompt-color-using-tput/) for color values.
+
+---
+
+### Disable Colors
+
+<ParamField path="NO_COLOR" type="string">
+  Disables all color output when set to any value.
+</ParamField>
+
+**Usage:**
+```bash
+export NO_COLOR=1
+```
+
+Follows the [NO_COLOR standard](https://no-color.org/).
+
+---
+
+### Disable fzf Integration
+
+<ParamField path="KUBECTX_IGNORE_FZF" type="string">
+  Disables interactive mode with fzf when set to 1.
+</ParamField>
+
+**Usage:**
+```bash
+export KUBECTX_IGNORE_FZF=1
+```
+
+---
+
+## Exit Codes
+
+| Code | Description |
+|------|-------------|
+| `0`  | Success |
+| `1`  | Error occurred (invalid context, file error, etc.) |
+
+---
+
+## Shell Completion
+
+`kubectx` supports tab completion for:
+- bash
+- zsh
+- fish
+
+Completion scripts are included with most installation methods. See the [Installation guide](/installation) for details on enabling completion for your shell.
+
+---
+
+## Integration with kubectl
+
+When installed as a kubectl plugin via [Krew](https://krew.sigs.k8s.io/), use:
+
+```bash
+kubectl ctx              # instead of kubectx
+kubectl ctx minikube     # switch context
+kubectl ctx --current    # show current
+```
+
+---
+
+## State Management
+
+`kubectx` stores the previous context in a state file to enable the `kubectx -` functionality:
+
+- **Location:** `~/.kube/kubectx` (or `$KUBECTX_STATE_DIR/kubectx` if set)
+- **Format:** Plain text file containing the name of the previous context
+- **Automatic:** Created and managed automatically
+
+---
+
+## Common Use Cases
+
+### Quick Context Switching
+
+Switch between development and production:
+
+```bash
+kubectx dev
+# Do some work
+kubectx prod
+# Check production
+kubectx -      # Back to dev
+```
+
+### Simplify Long Context Names
+
+Rename lengthy auto-generated names:
+
+```bash
+kubectx prod=gke_my-project-123456_us-central1-a_production-cluster
+kubectx dev=gke_my-project-123456_us-central1-a_development-cluster
+```
+
+### Clean Up Old Contexts
+
+Remove contexts for deleted clusters:
+
+```bash
+kubectx -d old-cluster-1 old-cluster-2 old-cluster-3
+```
+
+### Scripting and Automation
+
+Save current context before switching:
+
+```bash
+#!/bin/bash
+CURRENT=$(kubectx -c)
+kubectx staging
+# Perform operations
+kubectx "$CURRENT"  # Restore original context
+```
+
+---
+
+## Notes
+
+- Context deletion does not remove the associated cluster and user entries from kubeconfig
+- Renaming a context only changes the context entry name, not the cluster or user it references
+- The `kubectx -` command requires at least one previous context switch in the current session

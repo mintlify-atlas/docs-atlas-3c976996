@@ -1,0 +1,163 @@
+---
+title: Customizing Colors
+description: Learn how to customize the color output of kubectx and kubens
+---
+
+Both `kubectx` and `kubens` highlight the current context or namespace in their list output. You can customize these colors or disable color output entirely.
+
+## Current Implementation (Go-based)
+
+The Go implementation (v0.9.0+) uses a simplified color scheme with limited customization options.
+
+### Default Colors
+
+The current context/namespace is displayed in **green and bold** when listing:
+
+```bash
+$ kubectx
+minikube
+production
+staging
+```
+
+In the output above, the active context appears in green and bold.
+
+### Disabling Colors
+
+To disable all color output, set the `NO_COLOR` environment variable:
+
+```bash
+export NO_COLOR=1
+```
+
+This follows the [NO_COLOR standard](https://no-color.org/) and is respected by many command-line tools.
+
+<Tip>
+Color output is automatically disabled when stdout is not a terminal (e.g., when piping to another command).
+</Tip>
+
+## Legacy Implementation (Bash-based)
+
+The original Bash implementation offers more color customization through environment variables.
+
+<Warning>
+The `KUBECTX_CURRENT_FGCOLOR` and `KUBECTX_CURRENT_BGCOLOR` environment variables are deprecated in the Go implementation. They only work with the legacy Bash scripts.
+</Warning>
+
+### Customizing Foreground and Background Colors
+
+For the Bash implementation, you can customize both the text (foreground) and background colors using the `tput` command:
+
+```bash
+export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 6) # blue text
+export KUBECTX_CURRENT_BGCOLOR=$(tput setab 7) # white background
+```
+
+### Color Code Reference
+
+The `tput` command uses the following color codes:
+
+| Code | Color   |
+|------|--------|
+| 0    | Black  |
+| 1    | Red    |
+| 2    | Green  |
+| 3    | Yellow |
+| 4    | Blue   |
+| 5    | Magenta|
+| 6    | Cyan   |
+| 7    | White  |
+
+### Examples
+
+#### Blue text on white background
+
+```bash
+export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 6)
+export KUBECTX_CURRENT_BGCOLOR=$(tput setab 7)
+```
+
+#### Red text on black background
+
+```bash
+export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 1)
+export KUBECTX_CURRENT_BGCOLOR=$(tput setab 0)
+```
+
+#### Cyan text with default background
+
+```bash
+export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 6)
+# Leave BGCOLOR unset to use the default
+```
+
+### Default Colors (Bash)
+
+If you don't set these variables, the Bash implementation uses:
+- **Foreground**: Yellow (color code 3)
+- **Background**: Dark/Black (color code 0)
+
+## Making Changes Permanent
+
+To make your color preferences permanent, add the export commands to your shell configuration file:
+
+### Bash
+
+Add to `~/.bashrc` or `~/.bash_profile`:
+
+```bash
+# Disable colors
+export NO_COLOR=1
+
+# Or customize colors (Bash implementation only)
+export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 6)
+export KUBECTX_CURRENT_BGCOLOR=$(tput setab 7)
+```
+
+### Zsh
+
+Add to `~/.zshrc`:
+
+```bash
+# Disable colors
+export NO_COLOR=1
+
+# Or customize colors (Bash implementation only)
+export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 6)
+export KUBECTX_CURRENT_BGCOLOR=$(tput setab 7)
+```
+
+### Fish
+
+Add to `~/.config/fish/config.fish`:
+
+```fish
+# Disable colors
+set -x NO_COLOR 1
+
+# Or customize colors (Bash implementation only)
+set -x KUBECTX_CURRENT_FGCOLOR (tput setaf 6)
+set -x KUBECTX_CURRENT_BGCOLOR (tput setab 7)
+```
+
+<Note>
+Remember to restart your shell or source the configuration file for changes to take effect:
+```bash
+source ~/.bashrc  # or ~/.zshrc
+```
+</Note>
+
+## Checking Your Implementation
+
+To determine which implementation you're using:
+
+```bash
+kubectx --version
+```
+
+- If the output shows a version number (e.g., `0.9.x`), you're using the **Go implementation**
+- If the output is minimal or shows bash script info, you're using the **Bash implementation**
+
+<Tip>
+The Go implementation is recommended for new installations. You can download it from the [GitHub releases page](https://github.com/ahmetb/kubectx/releases).
+</Tip>

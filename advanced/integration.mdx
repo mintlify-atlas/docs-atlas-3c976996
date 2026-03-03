@@ -1,0 +1,308 @@
+---
+title: Integration with Other Tools
+description: Integrate kubectx and kubens with popular Kubernetes tools like kube-ps1, kubectl-aliases, and fzf
+---
+
+kubectx and kubens integrate seamlessly with other popular Kubernetes tools to enhance your workflow. This guide covers the most common integrations.
+
+## Integration with fzf
+
+[fzf](https://github.com/junegunn/fzf) is a command-line fuzzy finder that provides interactive selection for kubectx and kubens.
+
+### Setup
+
+<Steps>
+  <Step title="Install fzf">
+    Install fzf using your package manager:
+
+    ```bash
+    # macOS
+    brew install fzf
+
+    # Linux (apt)
+    sudo apt install fzf
+
+    # Linux (pacman)
+    sudo pacman -S fzf
+    ```
+  </Step>
+
+  <Step title="Use interactive mode">
+    Once fzf is installed, kubectx and kubens automatically enable interactive mode:
+
+    ```bash
+    # Shows interactive fuzzy-searchable list
+    kubectx
+    kubens
+    ```
+  </Step>
+</Steps>
+
+### Interactive Mode Features
+
+- **Fuzzy search**: Type to filter contexts/namespaces
+- **Arrow key navigation**: Navigate through filtered results
+- **Current indicator**: Highlighted current context/namespace
+- **Quick switching**: Press Enter to select
+
+<Tip>
+  Use `Ctrl+C` or `Esc` to exit interactive mode without making changes.
+</Tip>
+
+### Customizing Interactive Behavior
+
+```bash
+# Disable fzf even when installed
+export KUBECTX_IGNORE_FZF=1
+
+# Use non-interactive mode by piping output
+kubectx | cat
+kubens | grep production
+```
+
+## Integration with kube-ps1
+
+[kube-ps1](https://github.com/jonmosco/kube-ps1) displays your current Kubernetes context and namespace in your shell prompt. It works perfectly with kubectx and kubens.
+
+### Installation
+
+```bash
+# macOS
+brew install kube-ps1
+
+# Or clone the repository
+git clone https://github.com/jonmosco/kube-ps1.git ~/.kube-ps1
+```
+
+### Configuration
+
+Add to your `~/.bashrc` or `~/.zshrc`:
+
+```bash
+# Load kube-ps1
+source /usr/local/opt/kube-ps1/share/kube-ps1.sh  # Homebrew path
+# Or: source ~/.kube-ps1/kube-ps1.sh  # Manual installation
+
+# Add to your prompt
+PS1='$(kube_ps1)'$PS1  # bash
+PROMPT='$(kube_ps1)'$PROMPT  # zsh
+```
+
+### Real-time Prompt Updates
+
+When you switch contexts or namespaces with kubectx/kubens, kube-ps1 automatically reflects the changes:
+
+```bash
+# Your prompt shows current context and namespace
+(minikube|default) $ kubectx production
+Switched to context "production".
+
+# Prompt updates immediately
+(production|default) $ kubens kube-system
+Active namespace is "kube-system".
+
+# Prompt reflects the change
+(production|kube-system) $
+```
+
+### kube-ps1 Customization
+
+```bash
+# Customize display format
+export KUBE_PS1_PREFIX='('
+export KUBE_PS1_SUFFIX=') '
+export KUBE_PS1_SEPARATOR='|'
+export KUBE_PS1_SYMBOL_ENABLE=true
+export KUBE_PS1_SYMBOL_DEFAULT='⎈ '
+
+# Enable/disable on demand
+kubeon   # Enable kube-ps1
+kubeoff  # Disable kube-ps1
+```
+
+<Note>
+  kube-ps1 reads directly from your kubeconfig file, so any changes made by kubectx or kubens are immediately visible.
+</Note>
+
+## Integration with kubectl-aliases
+
+[kubectl-aliases](https://github.com/ahmetb/kubectl-aliases) provides hundreds of kubectl shortcuts. Combine it with kubectx/kubens for maximum efficiency.
+
+### Installation
+
+```bash
+# Download the aliases
+wget https://raw.githubusercontent.com/ahmetb/kubectl-aliases/master/.kubectl_aliases
+
+# Source in your shell configuration
+echo '[ -f ~/.kubectl_aliases ] && source ~/.kubectl_aliases' >> ~/.bashrc
+# Or for zsh:
+echo '[ -f ~/.kubectl_aliases ] && source ~/.kubectl_aliases' >> ~/.zshrc
+```
+
+### Recommended Workflow
+
+Combine kubectx/kubens with kubectl-aliases:
+
+```bash
+# Switch context and namespace
+kubectx production
+kubens monitoring
+
+# Use kubectl-aliases for operations
+kgpo  # kubectl get pods
+kdp   # kubectl describe pod
+kgd   # kubectl get deployment
+```
+
+### Custom Aliases
+
+Create custom aliases that combine kubectx/kubens:
+
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+alias kctx='kubectx'
+alias kns='kubens'
+alias kdev='kubectx dev && kubens development'
+alias kprod='kubectx prod && kubens production'
+alias kstage='kubectx staging && kubens staging'
+```
+
+## Integration with Shell Frameworks
+
+### Oh My Zsh
+
+kubectx and kubens have official Oh My Zsh plugin support:
+
+```bash
+# Add to ~/.zshrc plugins list
+plugins=(... kubectx kubectl)
+
+# Provides aliases:
+# kctx -> kubectx
+# kns -> kubens
+```
+
+### Zinit
+
+For Zinit users:
+
+```bash
+# Add to ~/.zshrc
+zinit ice as"program" pick"kubectx" \
+  atclone"cp completion/_kubectx.zsh _kubectx" \
+  atpull"%atclone"
+zinit light ahmetb/kubectx
+```
+
+## Integration with Starship Prompt
+
+[Starship](https://starship.rs/) automatically shows Kubernetes context/namespace:
+
+```toml
+# ~/.config/starship.toml
+[kubernetes]
+format = 'on [$symbol$context( ($namespace))](bold purple) '
+disabled = false
+
+[kubernetes.context_aliases]
+"gke_.*_(?P<cluster>[\w-]+)" = "gke-$cluster"
+```
+
+Starship updates automatically when you use kubectx/kubens.
+
+## Integration with Tmux
+
+Display current context/namespace in your tmux status bar:
+
+```bash
+# ~/.tmux.conf
+set -g status-right '#(kubectx -c):#(kubens -c) | %H:%M'
+```
+
+<Tip>
+  Combine with tmux-powerline for a more sophisticated status bar showing Kubernetes context and namespace.
+</Tip>
+
+## Integration with Vim/Neovim
+
+Display Kubernetes context in your editor status line:
+
+```vim
+" For vim-airline
+let g:airline#extensions#kubecontext#enabled = 1
+
+" For lightline.vim
+let g:lightline = {
+  \ 'active': {
+  \   'right': [ [ 'lineinfo' ], [ 'percent' ], [ 'kubecontext' ] ]
+  \ },
+  \ 'component_function': {
+  \   'kubecontext': 'KubeContext'
+  \ },
+\ }
+
+function! KubeContext()
+  return system('kubectx -c')[:-2] . ':' . system('kubens -c')[:-2]
+endfunction
+```
+
+## Environment Variables for Customization
+
+### Color Customization
+
+```bash
+# Customize current context/namespace colors
+export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 6)  # Blue text
+export KUBECTX_CURRENT_BGCOLOR=$(tput setab 7)  # White background
+```
+
+### Disable Colors
+
+```bash
+# Disable all colors (useful for piping)
+export NO_COLOR=1
+```
+
+### fzf Customization
+
+```bash
+# Disable fzf integration
+export KUBECTX_IGNORE_FZF=1
+
+# Customize fzf options for kubectx/kubens
+export FZF_DEFAULT_OPTS='--height 40% --reverse --border'
+```
+
+## Complete Integration Example
+
+Here's a complete setup combining multiple integrations:
+
+```bash
+# ~/.zshrc or ~/.bashrc
+
+# Load kube-ps1
+source /usr/local/opt/kube-ps1/share/kube-ps1.sh
+PROMPT='$(kube_ps1)'$PROMPT
+
+# Load kubectl-aliases
+[ -f ~/.kubectl_aliases ] && source ~/.kubectl_aliases
+
+# Custom aliases
+alias kctx='kubectx'
+alias kns='kubens'
+alias kdev='kubectx dev && kubens development'
+alias kprod='kubectx prod && kubens production'
+
+# Color customization
+export KUBECTX_CURRENT_FGCOLOR=$(tput setaf 2)  # Green
+export KUBE_PS1_SYMBOL_ENABLE=true
+export KUBE_PS1_SYMBOL_DEFAULT='⎈ '
+
+# Enable kube-ps1 by default
+kubeon
+```
+
+<Warning>
+  Make sure to source your shell configuration after making changes: `source ~/.bashrc` or `source ~/.zshrc`
+</Warning>

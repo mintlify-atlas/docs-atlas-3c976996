@@ -1,0 +1,403 @@
+---
+title: 'Contributing Guide'
+description: 'How to contribute to kubectx and kubens'
+---
+
+We welcome contributions to the kubectx and kubens projects! This guide will help you get started with contributing.
+
+## Ways to Contribute
+
+There are many ways you can contribute to kubectx and kubens:
+
+- **Report bugs** - Found an issue? Let us know!
+- **Suggest features** - Have an idea for improvement? Share it!
+- **Fix bugs** - Submit a pull request to fix an existing issue
+- **Add features** - Implement new functionality
+- **Improve documentation** - Help make the docs better
+- **Write tests** - Increase test coverage
+- **Review pull requests** - Help review community contributions
+
+## Before You Start
+
+### Contributor License Agreement
+
+Contributions to this project must be accompanied by a Contributor License Agreement (CLA). You (or your employer) retain the copyright to your contribution; this simply gives us permission to use and redistribute your contributions as part of the project.
+
+Head over to [https://cla.developers.google.com/](https://cla.developers.google.com/) to see your current agreements on file or to sign a new one.
+
+You generally only need to submit a CLA once, so if you've already submitted one (even if it was for a different project), you probably don't need to do it again.
+
+<Note>
+The CLA process is quick and only needs to be completed once for all Google open source projects.
+</Note>
+
+## Development Setup
+
+### Prerequisites
+
+To contribute to kubectx and kubens, you'll need:
+
+- **Go** 1.21 or later (for the Go implementation)
+- **Git** for version control
+- **Make** for building the project
+- **kubectl** for testing
+- A Kubernetes cluster for testing (minikube, kind, or real cluster)
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/ahmetb/kubectx.git
+cd kubectx
+```
+
+### Build the Project
+
+```bash
+# Build both kubectx and kubens
+make
+
+# Build only kubectx
+make kubectx
+
+# Build only kubens
+make kubens
+```
+
+The binaries will be created in the project root directory.
+
+### Run Tests
+
+```bash
+# Run all tests
+make test
+
+# Run tests for a specific package
+go test ./cmd/kubectx/...
+go test ./cmd/kubens/...
+```
+
+## Making Changes
+
+### 1. Create an Issue First
+
+Before starting work on a major feature or change:
+
+1. Check if an issue already exists for your idea
+2. If not, create a new issue describing:
+   - The problem you're solving
+   - Your proposed solution
+   - Any alternatives you considered
+
+This helps ensure your contribution aligns with project goals and avoids duplicate work.
+
+### 2. Fork and Branch
+
+```bash
+# Fork the repository on GitHub, then:
+git clone https://github.com/YOUR_USERNAME/kubectx.git
+cd kubectx
+
+# Create a feature branch
+git checkout -b feature/your-feature-name
+```
+
+Branch naming conventions:
+- `feature/` - for new features
+- `fix/` - for bug fixes
+- `docs/` - for documentation changes
+- `refactor/` - for code refactoring
+
+### 3. Make Your Changes
+
+When writing code:
+
+**Go Code Standards:**
+- Follow [Effective Go](https://golang.org/doc/effective_go.html) guidelines
+- Use `go fmt` to format your code
+- Run `go vet` to check for common mistakes
+- Add tests for new functionality
+- Update existing tests if behavior changes
+
+**Bash Code Standards (if modifying bash scripts):**
+- Use shellcheck to validate scripts
+- Follow existing code style
+- Add comments for complex logic
+
+**Documentation:**
+- Update README.md if adding new features
+- Update help text in code
+- Add code comments for complex logic
+
+### 4. Write Tests
+
+All new features and bug fixes should include tests:
+
+```go
+// Example test structure
+func TestYourFeature(t *testing.T) {
+    // Arrange
+    // Set up test data
+    
+    // Act
+    // Call the function being tested
+    
+    // Assert
+    // Verify the results
+}
+```
+
+Run tests to ensure everything passes:
+
+```bash
+make test
+```
+
+### 5. Commit Your Changes
+
+Write clear, descriptive commit messages:
+
+```bash
+git add .
+git commit -m "Add feature: interactive deletion with multi-select"
+```
+
+**Commit message guidelines:**
+- Use present tense ("Add feature" not "Added feature")
+- First line should be 50 characters or less
+- Add detailed description after a blank line if needed
+- Reference issue numbers (e.g., "Fixes #123")
+
+### 6. Push and Create Pull Request
+
+```bash
+git push origin feature/your-feature-name
+```
+
+Then create a pull request on GitHub with:
+
+- **Clear title** - Summarize the change
+- **Description** - Explain what, why, and how
+- **Issue reference** - Link to related issues
+- **Testing** - Describe how you tested the change
+- **Screenshots** - If applicable (for UI changes)
+
+## Code Review Process
+
+### What to Expect
+
+All submissions, including submissions by project members, require review. We use GitHub pull requests for this purpose.
+
+**Review timeline:**
+- Initial review: Usually within a few days
+- Feedback iterations: Varies based on complexity
+- Merge: After all feedback is addressed and tests pass
+
+**Reviewers may:**
+- Request changes to code style
+- Ask for additional tests
+- Suggest architectural improvements
+- Request documentation updates
+
+### Responding to Feedback
+
+When reviewers request changes:
+
+1. Make the requested changes in your branch
+2. Commit and push the updates
+3. Reply to review comments explaining your changes
+4. Mark conversations as resolved when addressed
+
+```bash
+# Make changes based on review
+git add .
+git commit -m "Address review feedback: improve error handling"
+git push origin feature/your-feature-name
+```
+
+### Getting Your PR Merged
+
+Your pull request will be merged when:
+
+- All review feedback is addressed
+- All tests pass (CI checks are green)
+- The CLA is signed
+- At least one maintainer approves
+- No merge conflicts exist
+
+## Testing Guidelines
+
+### Manual Testing
+
+Before submitting a PR, manually test your changes:
+
+```bash
+# Build the binaries
+make
+
+# Test kubectx
+./kubectx                    # List contexts
+./kubectx minikube          # Switch context
+./kubectx -                 # Switch to previous
+./kubectx -c                # Show current
+./kubectx new=old           # Rename
+./kubectx -d test           # Delete
+
+# Test kubens
+./kubens                    # List namespaces
+./kubens kube-system       # Switch namespace
+./kubens -                 # Switch to previous
+./kubens -c                # Show current
+./kubens test --force      # Force switch
+```
+
+### Automated Testing
+
+Ensure all automated tests pass:
+
+```bash
+# Run unit tests
+make test
+
+# Run specific test
+go test -v ./cmd/kubectx/ -run TestSpecificFunction
+
+# Check test coverage
+go test -cover ./cmd/kubectx/...
+go test -cover ./cmd/kubens/...
+```
+
+## Documentation Contributions
+
+Documentation improvements are highly valued!
+
+### README Updates
+
+If your change affects user-facing functionality:
+
+1. Update the main README.md
+2. Update relevant examples
+3. Add new sections if introducing features
+
+### Code Documentation
+
+For code changes:
+
+```go
+// Add godoc comments for exported functions
+// Example follows Go documentation standards
+//
+// SwitchContext changes the active context to the specified name.
+// It returns an error if the context does not exist or cannot be set.
+func SwitchContext(name string) error {
+    // Implementation
+}
+```
+
+### Help Text
+
+Update help text if adding or modifying commands:
+
+```go
+// cmd/kubectx/help.go or cmd/kubens/help.go
+const helpText = `USAGE:
+  kubectx <NEW_COMMAND>        : description of new command
+`
+```
+
+## Common Contribution Scenarios
+
+### Adding a New Command
+
+1. Add command parsing in `flags.go`
+2. Create operation struct and `Run()` method
+3. Add help text in `help.go`
+4. Write unit tests
+5. Update README.md
+6. Test manually
+
+### Fixing a Bug
+
+1. Write a test that reproduces the bug
+2. Verify the test fails
+3. Fix the bug
+4. Verify the test passes
+5. Submit PR with test and fix
+
+### Improving Error Messages
+
+1. Identify unclear error messages
+2. Update error text to be more descriptive
+3. Ensure errors include context
+4. Test error paths manually
+
+## Getting Help
+
+If you need help with your contribution:
+
+- **Ask in the issue** - Comment on the related issue
+- **GitHub Discussions** - Start a discussion for general questions
+- **Pull Request** - Ask questions in your PR description or comments
+- **Review existing code** - Look at similar features for guidance
+
+## Release Process
+
+<Note>
+This section is informational for contributors. Releases are handled by maintainers.
+</Note>
+
+The project follows semantic versioning (MAJOR.MINOR.PATCH):
+
+- **MAJOR** - Incompatible API changes
+- **MINOR** - New functionality (backward compatible)
+- **PATCH** - Bug fixes (backward compatible)
+
+Releases are published on the [GitHub Releases page](https://github.com/ahmetb/kubectx/releases).
+
+## Code of Conduct
+
+We are committed to providing a welcoming and inclusive environment:
+
+- Be respectful and considerate
+- Welcome newcomers and help them get started
+- Focus on constructive feedback
+- Assume good intentions
+- Respect differing viewpoints and experiences
+
+## Recognition
+
+Contributors are recognized in:
+
+- GitHub contributors list
+- Release notes (for significant contributions)
+- Project README (for major features)
+
+Thank you for contributing to kubectx and kubens!
+
+## Quick Reference
+
+```bash
+# Setup
+git clone https://github.com/ahmetb/kubectx.git
+cd kubectx
+
+# Build
+make
+
+# Test
+make test
+
+# Create PR
+git checkout -b feature/my-feature
+# Make changes
+git commit -m "Add feature: description"
+git push origin feature/my-feature
+# Create PR on GitHub
+```
+
+## Additional Resources
+
+- [GitHub Repository](https://github.com/ahmetb/kubectx)
+- [Issue Tracker](https://github.com/ahmetb/kubectx/issues)
+- [Pull Requests](https://github.com/ahmetb/kubectx/pulls)
+- [GitHub Help - Pull Requests](https://help.github.com/articles/about-pull-requests/)
+- [Effective Go](https://golang.org/doc/effective_go.html)

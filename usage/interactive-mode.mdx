@@ -1,0 +1,381 @@
+---
+title: Interactive Mode
+description: Using fzf integration for interactive context and namespace selection
+---
+
+kubectx and kubens support interactive mode through [fzf](https://github.com/junegunn/fzf), a command-line fuzzy finder. This provides a visual, searchable interface for selecting contexts and namespaces.
+
+## Prerequisites
+
+Interactive mode requires fzf to be installed on your system.
+
+<Steps>
+  <Step title="Install fzf">
+    <CodeGroup>
+    ```bash macOS (Homebrew)
+    brew install fzf
+    ```
+    
+    ```bash Ubuntu/Debian
+    sudo apt-get install fzf
+    ```
+    
+    ```bash Fedora
+    sudo dnf install fzf
+    ```
+    
+    ```bash From source
+    git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+    ~/.fzf/install
+    ```
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Verify installation">
+    ```bash
+    fzf --version
+    ```
+    **Output:**
+    ```
+    0.48.1 (brew)
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+Once fzf is installed, kubectx and kubens will automatically detect it and enable interactive mode when invoked without arguments in a TTY.
+</Tip>
+
+## Interactive Context Selection
+
+### Basic Usage
+
+When you run `kubectx` without arguments in an interactive terminal with fzf installed, it enters interactive mode:
+
+```bash
+kubectx
+```
+
+This opens an interactive fuzzy finder with all your contexts:
+
+```
+> 
+  10/10
+> minikube
+  gke_project_us-central1_dev
+  gke_project_us-central1_staging
+  gke_project_us-central1_prod
+  arn:aws:eks:us-west-2:123456789012:cluster/dev
+  arn:aws:eks:us-west-2:123456789012:cluster/staging
+  arn:aws:eks:us-west-2:123456789012:cluster/prod
+  docker-desktop
+  kind-local
+  k3d-test
+```
+
+The current context is highlighted with a different color.
+
+### Navigation
+
+<CardGroup cols={2}>
+  <Card title="Type to search" icon="magnifying-glass">
+    Start typing to filter contexts by name
+    ```
+    > prod
+      2/10
+    > gke_project_us-central1_prod
+      arn:aws:eks:us-west-2:123456789012:cluster/prod
+    ```
+  </Card>
+  
+  <Card title="Arrow keys" icon="arrows-up-down">
+    Use ↑/↓ to navigate through results
+  </Card>
+  
+  <Card title="Enter to select" icon="check">
+    Press Enter to switch to the highlighted context
+  </Card>
+  
+  <Card title="Esc to cancel" icon="xmark">
+    Press Esc or Ctrl+C to exit without changes
+  </Card>
+</CardGroup>
+
+### Example Session
+
+<Steps>
+  <Step title="Launch interactive mode">
+    ```bash
+    kubectx
+    ```
+  </Step>
+  
+  <Step title="Search for context">
+    Type `prod` to filter:
+    ```
+    > prod
+      2/10
+    > gke_project_us-central1_prod
+      arn:aws:eks:us-west-2:123456789012:cluster/prod
+    ```
+  </Step>
+  
+  <Step title="Select context">
+    Press Enter on `gke_project_us-central1_prod`
+    
+    **Output:**
+    ```
+    Switched to context "gke_project_us-central1_prod".
+    ```
+  </Step>
+</Steps>
+
+## Interactive Namespace Selection
+
+### Basic Usage
+
+Similarly, run `kubens` without arguments to enter interactive mode:
+
+```bash
+kubens
+```
+
+This opens an interactive fuzzy finder with all namespaces in the current context:
+
+```
+> 
+  15/15
+> default
+  kube-system
+  kube-public
+  kube-node-lease
+  production
+  staging
+  development
+  monitoring
+  logging
+  ingress-nginx
+  cert-manager
+  feature-auth
+  feature-payments
+  feature-notifications
+  qa-testing
+```
+
+The current active namespace is highlighted.
+
+### Example Session
+
+<Steps>
+  <Step title="Launch interactive mode">
+    ```bash
+    kubens
+    ```
+  </Step>
+  
+  <Step title="Search for namespace">
+    Type `feature` to filter:
+    ```
+    > feature
+      3/15
+    > feature-auth
+      feature-payments
+      feature-notifications
+    ```
+  </Step>
+  
+  <Step title="Select namespace">
+    Press Enter on `feature-auth`
+    
+    **Output:**
+    ```
+    Active namespace is "feature-auth".
+    ```
+  </Step>
+</Steps>
+
+## Interactive Delete
+
+kubectx also supports interactive deletion of contexts:
+
+```bash
+kubectx -d
+```
+
+This opens the same fzf interface, but selecting a context will delete it:
+
+<Warning>
+Use interactive delete mode with caution. Once you select a context, it will be immediately deleted from your kubeconfig.
+</Warning>
+
+<Steps>
+  <Step title="Launch interactive delete">
+    ```bash
+    kubectx -d
+    ```
+  </Step>
+  
+  <Step title="Find context to delete">
+    Search and navigate to the context you want to remove:
+    ```
+    > old
+      2/10
+    > old-dev-cluster
+      old-test-cluster
+    ```
+  </Step>
+  
+  <Step title="Confirm deletion">
+    Press Enter to delete the selected context
+    
+    **Output:**
+    ```
+    Deleted context old-dev-cluster.
+    ```
+  </Step>
+</Steps>
+
+If you delete the currently active context:
+```
+You deleted the current context. Use "kubectx" to select a new context.
+Deleted context production.
+```
+
+## Customizing fzf Behavior
+
+### Environment Variables
+
+You can customize fzf behavior using environment variables:
+
+```bash
+# Set default fzf options
+export FZF_DEFAULT_OPTS='--height 40% --reverse --border'
+
+# Now kubectx/kubens will use these options
+kubectx
+```
+
+### Custom fzf Options
+
+kubectx and kubens use specific fzf flags:
+- `--ansi`: Enable ANSI color codes (for highlighting current context/namespace)
+- `--no-preview`: Disable preview window
+
+These are hardcoded to ensure consistent behavior.
+
+## Color Output
+
+Interactive mode automatically enables color output to highlight:
+- The current context (in green)
+- The current namespace (in green)
+- Search matches (fzf default highlighting)
+
+Colors are applied through the `KUBECTL_CONTEXT_FORCE_COLOR` environment variable, which is automatically set when fzf is invoked.
+
+## Non-Interactive Fallback
+
+If fzf is not installed or not in PATH, kubectx and kubens fall back to non-interactive mode:
+
+```bash
+# Without fzf installed
+kubectx
+# Lists contexts (non-interactive)
+minikube
+gke_project_us-central1_dev
+gke_project_us-central1_staging
+```
+
+<Note>
+Interactive mode requires both fzf and a TTY (terminal). When piping output or running in scripts, kubectx/kubens automatically use non-interactive mode.
+</Note>
+
+## Tips and Tricks
+
+### Fuzzy Matching
+
+fzf uses fuzzy matching, so you don't need exact strings:
+
+```bash
+# Searching for "gke_project_us-central1_prod"
+# You can type:
+type: gkeprod
+type: gprod  
+type: gc1p
+# All will match!
+```
+
+### Quick Selection
+
+For frequently used contexts/namespaces, type just enough characters to make them unique:
+
+```bash
+kubectx
+# Type "mi" - if "minikube" is the only match, press Enter
+```
+
+### Multi-Select (Not Supported)
+
+<Warning>
+kubectx and kubens do not currently support multi-select in fzf. You can only select one context or namespace at a time.
+</Warning>
+
+## Troubleshooting
+
+### fzf Not Found
+
+If you see:
+```bash
+kubectx
+# Lists contexts without interactive mode
+```
+
+Check if fzf is in your PATH:
+```bash
+which fzf
+# /usr/local/bin/fzf (if installed)
+# (no output if not found)
+```
+
+Install fzf following the [Prerequisites](#prerequisites) section.
+
+### No Colors in Interactive Mode
+
+If the current context isn't highlighted:
+
+```bash
+# Check if color output is working
+kubectx
+# Current context should be in color
+
+# Force color output
+export KUBECTL_CONTEXT_FORCE_COLOR=1
+kubectx
+```
+
+### Interactive Mode in Scripts
+
+Interactive mode is automatically disabled in non-TTY environments:
+
+```bash
+#!/bin/bash
+# This will use non-interactive mode
+CONTEXT=$(kubectx | grep prod)
+```
+
+To force non-interactive mode in a TTY:
+```bash
+# Pipe to cat to disable TTY detection
+kubectx | cat
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="kubectx Commands" icon="layer-group" href="/usage/kubectx">
+    Learn all kubectx commands and options
+  </Card>
+  
+  <Card title="kubens Commands" icon="cubes" href="/usage/kubens">
+    Learn all kubens commands and options
+  </Card>
+</CardGroup>

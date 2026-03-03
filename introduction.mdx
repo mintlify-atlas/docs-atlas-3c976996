@@ -1,0 +1,136 @@
+---
+title: 'Introduction'
+description: 'Power tools for kubectl - faster context and namespace switching'
+---
+
+# kubectx + kubens: Power tools for kubectl
+
+Faster way to switch between clusters and namespaces in kubectl.
+
+<CardGroup cols={2}>
+  <Card
+    title="kubectx"
+    icon="server"
+    href="/usage/kubectx"
+  >
+    Switch between Kubernetes contexts (clusters) quickly
+  </Card>
+  <Card
+    title="kubens"
+    icon="cube"
+    href="/usage/kubens"
+  >
+    Switch between Kubernetes namespaces effortlessly
+  </Card>
+</CardGroup>
+
+## What are kubectx and kubens?
+
+**kubectx** is a tool to switch between contexts (clusters) on kubectl faster.
+
+**kubens** is a tool to switch between Kubernetes namespaces (and configure them for kubectl) easily.
+
+Both tools support:
+- Tab completion on bash/zsh/fish shells
+- Interactive mode with [fzf](https://github.com/junegunn/fzf) for fuzzy searching
+- Quick switching back to previous context/namespace with `-`
+- Color-coded output for current context/namespace
+
+## Quick Examples
+
+### kubectx Examples
+
+<CodeGroup>
+```bash Switch to another cluster
+$ kubectx minikube
+Switched to context "minikube".
+```
+
+```bash Switch back to previous cluster
+$ kubectx -
+Switched to context "oregon".
+```
+
+```bash Rename context
+$ kubectx dublin=gke_ahmetb_europe-west1-b_dublin
+Context "gke_ahmetb_europe-west1-b_dublin" renamed to "dublin".
+```
+</CodeGroup>
+
+### kubens Examples
+
+<CodeGroup>
+```bash Change the active namespace
+$ kubens kube-system
+Context "test" set.
+Active namespace is "kube-system".
+```
+
+```bash Go back to previous namespace
+$ kubens -
+Context "test" set.
+Active namespace is "default".
+```
+
+```bash Force change to namespace (even if it doesn't exist)
+$ kubens not-found-namespace --force
+Context "test" set.
+Active namespace is "not-found-namespace".
+```
+</CodeGroup>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Interactive Mode" icon="magnifying-glass">
+    Install [fzf](https://github.com/junegunn/fzf) for interactive fuzzy search of contexts and namespaces
+  </Card>
+  
+  <Card title="Shell Completion" icon="terminal">
+    Tab completion support for bash, zsh, and fish shells
+  </Card>
+  
+  <Card title="Previous Selection" icon="clock-rotate-left">
+    Quickly switch back to your previous context or namespace with `-`
+  </Card>
+  
+  <Card title="Customizable Colors" icon="palette">
+    Customize output colors with environment variables
+  </Card>
+</CardGroup>
+
+<Tip>
+Both tools are available as bash scripts and Go binaries. Starting with v0.9.0, the Go implementation is actively developed with new features.
+</Tip>
+
+## Implementation
+
+kubectx and kubens are available in two implementations:
+
+- **Bash scripts**: Stable, lightweight scripts included in the repository
+- **Go binaries**: Rewritten in Go (v0.9.0+) with new features and improvements
+
+Both implementations work the same way, and the bash-based versions will continue to be maintained.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+  >
+    Get started with kubectx and kubens on your platform
+  </Card>
+  <Card
+    title="Usage Guide"
+    icon="book"
+    href="/usage/kubectx"
+  >
+    Learn all the ways to use kubectx and kubens
+  </Card>
+</CardGroup>
+
+<Note>
+Pair kubectx and kubens with [kube-ps1](https://github.com/jonmosco/kube-ps1) to add context/namespace information to your shell prompt.
+</Note>
