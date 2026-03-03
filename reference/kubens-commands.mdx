@@ -349,7 +349,7 @@ kubectl ns -f new-ns        # force switch
 
 `kubens` stores the previous namespace per context in a state file:
 
-- **Location:** `~/.kube/kubens/` (or `$KUBECTX_STATE_DIR/kubens/` if set)
+- **Location:** `~/.kube/kubens/`
 - **Format:** Separate files for each context, named by context name
 - **Content:** Plain text containing the name of the previous namespace
 - **Automatic:** Created and managed automatically
