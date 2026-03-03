@@ -1,0 +1,94 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "kubectx + kubens",
+  "projectDescription": "Fast command-line tools for switching between kubectl contexts and Kubernetes namespaces",
+  "theme": "aspen",
+  "primaryColor": "#326CE5",
+  "lightColor": "#4A90E2",
+  "darkColor": "#1E4BA1",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation"
+            ]
+          },
+          {
+            "group": "Usage",
+            "pages": [
+              "usage/kubectx",
+              "usage/kubens",
+              "usage/interactive-mode",
+              "usage/shell-completion"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/environment-variables",
+              "configuration/customizing-colors"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/kubectl-plugin",
+              "advanced/integration",
+              "advanced/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Command Reference",
+            "pages": [
+              "reference/kubectx-commands",
+              "reference/kubens-commands"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "reference/faq",
+              "reference/contributing"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Fast context switching between Kubernetes clusters",
+    "Quick namespace switching within contexts",
+    "Interactive fuzzy search with fzf integration",
+    "Context and namespace history with '-' command",
+    "Context renaming and deletion",
+    "Shell completion for bash/zsh/fish",
+    "Available as kubectl plugins",
+    "Cross-platform support (Linux, macOS, Windows)",
+    "Written in Go for performance",
+    "Colorized output with customization"
+  ],
+  "publicApiSurface": [
+    "kubectx - list contexts",
+    "kubectx <NAME> - switch to context",
+    "kubectx - - switch to previous context",
+    "kubectx -c, --current - show current context",
+    "kubectx <NEW>=<OLD> - rename context",
+    "kubectx -d <NAME> - delete context",
+    "kubectx -u, --unset - unset current context",
+    "kubens - list namespaces",
+    "kubens <NAME> - switch to namespace",
+    "kubens - - switch to previous namespace",
+    "kubens -c, --current - show current namespace",
+    "kubens <NAME> --force - force switch to namespace"
+  ]
+}
